@@ -1,5 +1,7 @@
-Turbo Website v5
-- ارفع محتويات هذا المجلد إلى Repository: Turbo_Website
-- اللوحة لها زر صغير جدًا في الشريط العلوي.
-- كلمة المرور لا توجد داخل الموقع؛ يتم التحقق منها من Railway.
-- بعد رفع الملفات انتظر GitHub Pages ثم اعمل Ctrl+F5.
+Turbo Website V9
+- القوانين مخفية لحد ما المستخدم يسحب شريط Rules للنهاية.
+- ظهور تدريجي للعناصر عند الاقتراب منها بالـ Scroll.
+- بانر Turbo المتحرك مضاف أعلى الموقع.
+- زر دخول الديسكورد وزر التواصل مع الإدارة يفتحان: https://discord.gg/tTDwVP5sE
+- 3D hero + drag rules محفوظين.
+- ارفع كل الملفات إلى Root في Turbo_Website ثم Ctrl+F5 بعد اكتمال GitHub Pages.

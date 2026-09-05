@@ -253,7 +253,7 @@ init();
   let dragging=false,startX=0,startDrag=0,current=0,max=0,pointerId=null;
   const recalc=()=>{max=Math.max(0,track.clientWidth-thumb.offsetWidth-18)};
   const setDrag=v=>{recalc();current=Math.max(0,Math.min(max,v));track.style.setProperty('--drag',current+'px');track.setAttribute('aria-valuenow',String(max?Math.round(current/max*100):0))};
-  const openRules=()=>{current=max;track.style.setProperty('--drag',max+'px');track.setAttribute('aria-valuenow','100');track.classList.add('completed');if(navigator.vibrate)navigator.vibrate(25);setTimeout(()=>{location.hash='rules';document.getElementById('rules')?.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{track.classList.remove('completed');setDrag(0)},950)},180)};
+  const openRules=()=>{current=max;track.style.setProperty('--drag',max+'px');track.setAttribute('aria-valuenow','100');track.classList.add('completed');if(navigator.vibrate)navigator.vibrate(25);setTimeout(()=>{window.__turboUnlockRules?.();location.hash='rules';document.getElementById('rules')?.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{track.classList.remove('completed');setDrag(0)},950)},180)};
   const finish=()=>{if(!dragging)return;dragging=false;track.classList.remove('dragging');recalc();if(max&&current/max>=.72)openRules();else setDrag(0)};
   const begin=(clientX,id)=>{recalc();dragging=true;pointerId=id??null;track.classList.add('dragging');startX=clientX;startDrag=current};
 
@@ -274,4 +274,52 @@ init();
   track.addEventListener('keydown',e=>{recalc();if(e.key==='ArrowRight'){setDrag(current+Math.max(28,max*.12));e.preventDefault()}if(e.key==='ArrowLeft'){setDrag(current-Math.max(28,max*.12));e.preventDefault()}if(e.key==='Enter'||e.key===' '){openRules();e.preventDefault()}});
   window.addEventListener('resize',()=>setDrag(Math.min(current,max)));
   requestAnimationFrame(()=>setDrag(0));
+})();
+
+// v9: scroll-driven reveal + rules remain hidden until the drag is completed.
+(function initTurboRevealV9(){
+  const rules=document.getElementById('rules');
+  const launcher=document.getElementById('rulesDragLauncher');
+  let unlocked=false;
+
+  function unlockRules(){
+    if(unlocked) return;
+    unlocked=true;
+    if(rules){
+      rules.classList.remove('rules-locked');
+      rules.classList.add('rules-unlocked','reveal-section');
+      rules.setAttribute('aria-hidden','false');
+      requestAnimationFrame(()=>rules.classList.add('is-visible'));
+    }
+  }
+  window.__turboUnlockRules=unlockRules;
+
+  // A direct click on "القوانين" in navigation brings the user to the gateway until it is unlocked.
+  document.querySelectorAll('a[href="#rules"]').forEach(a=>a.addEventListener('click',e=>{
+    if(unlocked) return;
+    e.preventDefault();
+    launcher?.scrollIntoView({behavior:'smooth',block:'center'});
+    launcher?.classList.add('is-near');
+    setTimeout(()=>launcher?.classList.remove('is-near'),1800);
+  }));
+
+  const selector='.reveal-section,.section-head,.about-grid>.card,.creator,.rule-group,.form-shell,.rules-gateway';
+  const getTargets=()=>[...document.querySelectorAll(selector)].filter(el=>!el.closest('#rules.rules-locked'));
+  if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const io=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){entry.target.classList.add('is-visible');io.unobserve(entry.target)}
+      });
+    },{rootMargin:'0px 0px -8% 0px',threshold:.08});
+    getTargets().forEach(el=>io.observe(el));
+
+    if(launcher){
+      const near=new IntersectionObserver(entries=>entries.forEach(e=>launcher.classList.toggle('is-near',e.isIntersecting)),{rootMargin:'-20% 0px -20% 0px',threshold:.15});
+      near.observe(launcher);
+    }
+
+    // dynamic cards/rules added after API responses
+    const mo=new MutationObserver(()=>getTargets().forEach(el=>{if(!el.classList.contains('is-visible'))io.observe(el)}));
+    mo.observe(document.body,{childList:true,subtree:true});
+  }else getTargets().forEach(el=>el.classList.add('is-visible'));
 })();

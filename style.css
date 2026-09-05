@@ -81,3 +81,23 @@ button:disabled{opacity:.6;cursor:not-allowed;filter:saturate(.6)}
 .drag-track-label{position:absolute;right:22px;top:50%;transform:translateY(-50%);display:grid;text-align:right;pointer-events:none;z-index:2}.drag-track-label span{font-size:9px;letter-spacing:3px;color:#4a8db9}.drag-track-label b{font-size:14px;color:#a9c6dc}.rules-drag-track.completed{border-color:#43b8ff;box-shadow:0 0 0 1px #168cff55,0 0 55px #168cff35,inset 0 0 35px #168cff22}.rules-drag-track.completed .rules-drag-thumb{filter:brightness(1.25)}
 @media(max-width:800px){.rules-gateway-top{grid-template-columns:54px 1fr;padding:22px}.rules-gateway-orbit{display:none}.rules-gateway-copy strong{font-size:23px}.rules-drag-track{margin:18px 20px 22px;height:68px}.rules-drag-thumb{width:50px!important;height:50px!important;top:8px!important;left:8px!important;border-radius:15px!important}.drag-track-label{display:none}}
 @media(max-width:520px){.rules-gateway-top{grid-template-columns:1fr;gap:12px}.rules-gateway-index{width:44px;height:44px}.rules-gateway-copy strong{font-size:20px}.rules-drag-track{margin:14px;height:62px}.rules-drag-thumb{width:46px!important;height:46px!important;top:7px!important;left:7px!important}}
+
+/* v9 — animated banner, progressive reveal, gated rules */
+.turbo-banner{display:block;width:100%;height:96px;overflow:hidden;border-bottom:1px solid #16324a;background:#06101a;position:relative;z-index:8;box-shadow:0 18px 55px #0006}
+.turbo-banner img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;filter:saturate(1.07) contrast(1.04);transform:scale(1.01)}
+.hero{padding-top:86px}
+.hero-actions-discord{display:flex;gap:12px;flex-wrap:wrap}.hero-actions-discord .btn{min-width:190px}.btn-ico{font-size:15px;color:#57bbff}.discord-community-btn{box-shadow:0 14px 40px #168cff32}.admin-contact-btn{border-color:#22557d}
+.rules-locked{display:none!important}.rules-unlocked{display:block!important;animation:rulesUnlock .75s cubic-bezier(.22,.9,.3,1) both}@keyframes rulesUnlock{from{opacity:0;transform:translateY(42px);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+
+/* elements materialize as the viewer approaches them */
+.reveal-section,.section-head,.about-grid>.card,.creator,.rule-group,.form-shell,.rules-gateway{opacity:0;transform:translateY(42px) scale(.985);filter:blur(7px);transition:opacity .8s cubic-bezier(.2,.75,.25,1),transform .8s cubic-bezier(.2,.75,.25,1),filter .8s ease}
+.reveal-section.is-visible,.section-head.is-visible,.about-grid>.card.is-visible,.creator.is-visible,.rule-group.is-visible,.form-shell.is-visible,.rules-gateway.is-visible{opacity:1;transform:none;filter:none}
+.about-grid>.card:nth-child(2),.creator:nth-child(2n),.rule-group:nth-child(2n){transition-delay:.08s}.about-grid>.card:nth-child(3),.creator:nth-child(3n){transition-delay:.15s}
+.hero-copy,.hero-visual{animation:heroIn .95s cubic-bezier(.22,.9,.3,1) both}.hero-visual{animation-delay:.12s}@keyframes heroIn{from{opacity:0;transform:translateY(34px) scale(.98)}to{opacity:1;transform:none}}
+
+/* gateway becomes brighter as it enters the viewport */
+.rules-gateway.is-visible{box-shadow:0 35px 110px #0008,0 0 70px #168cff18,0 0 0 1px #168cff12 inset}
+.rules-gateway.is-near .rules-gateway-copy strong{animation:rulesTextPulse 1.8s ease-in-out infinite}@keyframes rulesTextPulse{50%{text-shadow:0 0 28px #168cff44}}
+
+@media(max-width:760px){.turbo-banner{height:72px}.hero{padding-top:58px}.hero-actions-discord{flex-direction:column}.hero-actions-discord .btn{width:100%}}
+@media(prefers-reduced-motion:reduce){.reveal-section,.section-head,.about-grid>.card,.creator,.rule-group,.form-shell,.rules-gateway{opacity:1!important;transform:none!important;filter:none!important;transition:none!important}.hero-copy,.hero-visual{animation:none!important}}
