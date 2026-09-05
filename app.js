@@ -276,25 +276,68 @@ init();
   requestAnimationFrame(()=>setDrag(0));
 })();
 
-// v9: scroll-driven reveal + rules remain hidden until the drag is completed.
-(function initTurboRevealV9(){
+// v10: rules are physically absent until the slider is completed.
+// Once unlocked, the rules header and each rule group reveal progressively as they approach the viewport.
+(function initTurboRevealV10(){
   const rules=document.getElementById('rules');
   const launcher=document.getElementById('rulesDragLauncher');
   let unlocked=false;
+  let io=null;
+
+  const selector='.reveal-section,.section-head,.about-grid>.card,.creator,.rule-group,.form-shell,.rules-gateway';
+
+  function canObserve(el){
+    if(!el) return false;
+    // Nothing inside the rules section should participate while it is still locked/display:none.
+    if(el.closest('#rules') && !unlocked) return false;
+    return true;
+  }
+
+  function revealTargets(root=document){
+    const targets=[...root.querySelectorAll(selector)].filter(canObserve);
+    if(io){
+      targets.forEach(el=>{
+        if(!el.classList.contains('is-visible')) io.observe(el);
+      });
+    }else{
+      targets.forEach(el=>el.classList.add('is-visible'));
+    }
+  }
+
+  if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+    io=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    },{
+      // Begin revealing a little before the element fully reaches the viewport.
+      rootMargin:'0px 0px -9% 0px',
+      threshold:.07
+    });
+  }
 
   function unlockRules(){
     if(unlocked) return;
     unlocked=true;
-    if(rules){
-      rules.classList.remove('rules-locked');
-      rules.classList.add('rules-unlocked','reveal-section');
-      rules.setAttribute('aria-hidden','false');
-      requestAnimationFrame(()=>rules.classList.add('is-visible'));
-    }
+    if(!rules) return;
+
+    // Remove display:none first, but do NOT reveal all children at once.
+    rules.classList.remove('rules-locked');
+    rules.classList.add('rules-unlocked');
+    rules.setAttribute('aria-hidden','false');
+
+    // Register the already-rendered rules immediately. This is the part that was missing in V9.
+    requestAnimationFrame(()=>{
+      revealTargets(rules);
+      // If the API injects rule groups a moment later, the observer below catches them too.
+    });
   }
   window.__turboUnlockRules=unlockRules;
 
-  // A direct click on "القوانين" in navigation brings the user to the gateway until it is unlocked.
+  // Navigation "القوانين" points to the slider until it has been unlocked.
   document.querySelectorAll('a[href="#rules"]').forEach(a=>a.addEventListener('click',e=>{
     if(unlocked) return;
     e.preventDefault();
@@ -303,23 +346,27 @@ init();
     setTimeout(()=>launcher?.classList.remove('is-near'),1800);
   }));
 
-  const selector='.reveal-section,.section-head,.about-grid>.card,.creator,.rule-group,.form-shell,.rules-gateway';
-  const getTargets=()=>[...document.querySelectorAll(selector)].filter(el=>!el.closest('#rules.rules-locked'));
-  if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches){
-    const io=new IntersectionObserver(entries=>{
-      entries.forEach(entry=>{
-        if(entry.isIntersecting){entry.target.classList.add('is-visible');io.unobserve(entry.target)}
+  // Normal site reveal, excluding the hidden rules section.
+  revealTargets(document);
+
+  if(launcher && 'IntersectionObserver' in window){
+    const near=new IntersectionObserver(entries=>{
+      entries.forEach(e=>launcher.classList.toggle('is-near',e.isIntersecting));
+    },{rootMargin:'-20% 0px -20% 0px',threshold:.15});
+    near.observe(launcher);
+  }
+
+  // Dynamic creators/rules/forms inserted by API calls.
+  const mo=new MutationObserver(records=>{
+    for(const rec of records){
+      rec.addedNodes.forEach(node=>{
+        if(node.nodeType!==1) return;
+        if(canObserve(node) && node.matches?.(selector) && !node.classList.contains('is-visible')){
+          if(io) io.observe(node); else node.classList.add('is-visible');
+        }
+        revealTargets(node);
       });
-    },{rootMargin:'0px 0px -8% 0px',threshold:.08});
-    getTargets().forEach(el=>io.observe(el));
-
-    if(launcher){
-      const near=new IntersectionObserver(entries=>entries.forEach(e=>launcher.classList.toggle('is-near',e.isIntersecting)),{rootMargin:'-20% 0px -20% 0px',threshold:.15});
-      near.observe(launcher);
     }
-
-    // dynamic cards/rules added after API responses
-    const mo=new MutationObserver(()=>getTargets().forEach(el=>{if(!el.classList.contains('is-visible'))io.observe(el)}));
-    mo.observe(document.body,{childList:true,subtree:true});
-  }else getTargets().forEach(el=>el.classList.add('is-visible'));
+  });
+  mo.observe(document.body,{childList:true,subtree:true});
 })();
