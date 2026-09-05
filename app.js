@@ -2,7 +2,6 @@ const RAW_API = String(window.TURBO_API || '').trim();
 const API_CONFIGURED = /^https:\/\//i.test(RAW_API) && !/YOUR-RAILWAY-DOMAIN/i.test(RAW_API);
 const API = API_CONFIGURED ? RAW_API.replace(/\/$/,'') : '';
 let token = localStorage.getItem('turbo_token') || '';
-let adminToken = sessionStorage.getItem('turbo_admin_token') || '';
 let pub = null, me = null;
 
 const $ = s => document.querySelector(s);
@@ -113,8 +112,7 @@ function oauthLogin(e){if(e&&e.preventDefault)e.preventDefault();if(!API_CONFIGU
 async function api(path,opt={}){
   if(!API_CONFIGURED) throw Object.assign(new Error('API_NOT_CONFIGURED'),{status:0});
   const h={'content-type':'application/json',...(opt.headers||{})};
-  const useToken = path.startsWith('/api/admin') && adminToken ? adminToken : token;
-  if(useToken)h.authorization=`Bearer ${useToken}`;
+  if(token)h.authorization=`Bearer ${token}`;
   const r=await fetch(API+path,{...opt,headers:h});
   const j=await r.json().catch(()=>({}));
   if(!r.ok)throw Object.assign(new Error(j.error||'ERROR'),{status:r.status,data:j});
@@ -131,11 +129,8 @@ async function init(){
   $('#menu').onclick=()=>$('#nav').classList.toggle('open');
   document.querySelectorAll('#nav a').forEach(a=>a.onclick=()=>$('#nav').classList.remove('open'));
   $('#loginBtn').href=`${API || 'https://botsturbo-production.up.railway.app'}/auth/discord`; $('#loginBtn').onclick=oauthLogin;
-  $('#adminSecretBtn').onclick=openAdminLogin;
-  $('#adminModalClose').onclick=closeAdminLogin;
-  $('#adminLoginModal').onclick=e=>{if(e.target.id==='adminLoginModal')closeAdminLogin()};
-  $('#adminPasswordForm').onsubmit=adminPasswordLogin;
-  if(adminToken) tryAdminSession();
+  $('#adminSecretBtn').onclick=openAdminPanel;
+  $('#adminSecretBtn').classList.add('hidden');
 
   if(!API_CONFIGURED){
     showSetup();
@@ -174,6 +169,8 @@ function renderPublic(){
 function renderMe(){
   $('#loginBtn').innerHTML=`<span class="discord-dot">◈</span><span>${esc(me.user.globalName||me.user.username)} • خروج</span>`;
   $('#loginBtn').onclick=()=>{localStorage.removeItem('turbo_token');location.reload()};
+  const adminBtn=$('#adminSecretBtn');
+  if(me?.isAdmin) adminBtn.classList.remove('hidden'); else adminBtn.classList.add('hidden');
   renderApply();renderStatus();
 }
 function renderApply(){
@@ -190,30 +187,16 @@ function countdown(){const end=Date.now()+me.waitMs;const tick=()=>{const el=$('
 function renderStatus(){const box=$('#statusBox');if(!token){box.innerHTML='<div class="notice">سجّل دخول علشان تشوف حالة تقديمك.</div>';return}if(!me.latest){box.innerHTML='<div class="notice">لسه ما قدمتش. ابدأ من قسم التقديم.</div>';return}const a=me.latest;let x=`<div class="status-card"><span class="tag">تقديم #${a.number}</span><h3>${statusText(a.status)}</h3><div>الاسم: <b>${esc(a.realName)}</b></div>`;if(a.status==='pending')x+='<div class="notice">طلبك وصل لروم المراجعة ومستني قرار الإدارة.</div>';if(a.status==='rejected')x+=`<div class="notice bad"><b>سبب الرفض:</b><br>${esc(a.reason||'لم يتم تحديد سبب')}</div>`;if(a.status==='pre_accepted'){x+='<div class="notice good">تم قبولك مبدئيًا. الخطوة الجاية هي المقابلة الصوتية.</div>';if(me.booked)x+=`<div class="notice">موعدك المحجوز: <b>${new Date(me.booked.at).toLocaleString('ar-EG')}</b><br>${esc(me.booked.note||'')}</div>`;else x+=`<h3>اختار موعد المقابلة</h3><div class="list">${pub.interviewSlots.length?pub.interviewSlots.map(s=>`<div class="item"><span>${new Date(s.at).toLocaleString('ar-EG')}<br><small>${esc(s.note||'')}</small></span><button class="smallbtn" onclick="bookSlot('${s.id}')">حجز</button></div>`).join(''):'<div class="notice">لا توجد مواعيد متاحة حاليًا.</div>'}</div>`}if(a.status==='voice_passed')x+='<div class="notice good">✅ تم قبولك في المقابلة ومنحك رول تصريح الدخول.</div>';box.innerHTML=x+'</div>'}
 window.bookSlot=async id=>{try{await api(`/api/interviews/${id}/book`,{method:'POST',body:'{}'});toast('تم حجز الموعد');me=await api('/api/me');pub=await api('/api/public');renderStatus()}catch{toast('الموعد غير متاح')}};
 
-function openAdminLogin(){
-  $('#adminLoginModal').classList.remove('hidden');
-  $('#adminPasswordInput').value='';
-  $('#adminLoginError').classList.add('hidden');
-  setTimeout(()=>$('#adminPasswordInput').focus(),50);
-}
-function closeAdminLogin(){ $('#adminLoginModal').classList.add('hidden'); }
-async function adminPasswordLogin(e){
-  e.preventDefault();
-  const password=$('#adminPasswordInput').value;
-  $('#adminLoginError').classList.add('hidden');
+async function openAdminPanel(){
+  if(!token){toast('سجّل دخول بحساب Discord الأول.');return;}
+  if(!me?.isAdmin){toast('غير مصرح لك بفتح لوحة التحكم.');return;}
   try{
-    const r=await fetch(API+'/api/admin/password-login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password})});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok||!j.token) throw new Error('BAD_PASSWORD');
-    adminToken=j.token;sessionStorage.setItem('turbo_admin_token',adminToken);
-    closeAdminLogin();
     $('#admin').classList.remove('hidden');
     await renderAdmin();
-    location.hash='admin';toast('تم فتح لوحة التحكم');
-  }catch{ $('#adminLoginError').classList.remove('hidden'); }
-}
-async function tryAdminSession(){
-  try{await api('/api/admin/state');$('#admin').classList.remove('hidden')}catch{adminToken='';sessionStorage.removeItem('turbo_admin_token')}
+    location.hash='admin';
+  }catch(e){
+    toast(e?.status===403?'غير مصرح لك بفتح لوحة التحكم.':'تعذر فتح لوحة التحكم.');
+  }
 }
 async function renderAdmin(){const st=await api('/api/admin/state');$('#adminBox').innerHTML=`<div class="admin-grid"><div class="card"><h3>التقديم</h3><p>الحالة: <b>${st.settings.applicationsOpen?'مفتوح':'مغلق'}</b></p><button class="${st.settings.applicationsOpen?'danger':'btn primary'}" onclick="toggleApps(${!st.settings.applicationsOpen})">${st.settings.applicationsOpen?'قفل التقديم':'فتح التقديم'}</button></div><div class="card"><h3>الطلبات</h3><div class="list">${[...st.applications].reverse().slice(0,20).map(a=>`<div class="item"><span>#${a.number} ${esc(a.realName)}<br><small>${statusText(a.status)} • ${a.discordId}</small></span><span>${a.status==='pre_accepted'?`<button class="smallbtn" onclick="voicePass('${a.discordId}')">نجح بالمقابلة</button>`:''} <button class="smallbtn" onclick="resetUser('${a.discordId}')">سماح بإعادة التقديم</button></span></div>`).join('')||'لا يوجد'}</div></div><div class="card"><h3>إضافة صانع محتوى</h3><form id="creatorForm" class="form-grid"><div class="field"><input name="name" placeholder="الاسم" required></div><div class="field"><input name="order" type="number" placeholder="الترتيب" value="1"></div><div class="field full"><input name="image" placeholder="لينك الصورة" required></div><div class="field full"><input name="url" placeholder="لينك الصفحة" required></div><div class="field"><select name="platform"><option value="youtube">YouTube</option><option value="twitch">Twitch</option><option value="other">Other</option></select></div><div class="field"><input name="platformId" placeholder="Channel ID / Twitch login"></div><button class="btn primary" type="submit">إضافة</button></form><div class="list">${st.creators.map(c=>`<div class="item"><span>${esc(c.name)} ${c.isLive?'🔴':''}</span><button class="danger" onclick="delCreator('${c.id}')">حذف</button></div>`).join('')}</div></div><div class="card"><h3>مواعيد المقابلات</h3><form id="slotForm"><div class="field"><input name="at" type="datetime-local" required></div><div class="field"><input name="note" placeholder="ملاحظة / روم المقابلة"></div><br><button class="btn primary">إضافة موعد</button></form><div class="list">${st.interviewSlots.map(s=>`<div class="item"><span>${new Date(s.at).toLocaleString('ar-EG')} ${s.bookedBy?'• محجوز':''}</span>${!s.bookedBy?`<button class="danger" onclick="delSlot('${s.id}')">حذف</button>`:''}</div>`).join('')}</div></div></div>`;$('#creatorForm').onsubmit=addCreator;$('#slotForm').onsubmit=addSlot}
 window.toggleApps=async v=>{await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({applicationsOpen:v})});pub=await api('/api/public');renderPublic();renderAdmin();toast(v?'تم فتح التقديم':'تم قفل التقديم')};
