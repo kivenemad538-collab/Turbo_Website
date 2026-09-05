@@ -1,0 +1,1 @@
+// حط رابط Railway هنا بعد عمل Generate Domain\nwindow.TURBO_API = 'https://YOUR-RAILWAY-DOMAIN.up.railway.app';\n
