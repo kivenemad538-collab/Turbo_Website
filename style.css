@@ -23,3 +23,45 @@ main{width:min(1240px,90vw);margin:auto}.hero{min-height:calc(100vh - 78px);disp
 .admin-modal-card h3{font-size:25px;margin:12px 0 5px}.admin-modal-card p{color:#7891a8;margin:0 0 20px}.admin-lock-icon{width:54px;height:54px;margin:auto;border-radius:17px;display:grid;place-items:center;color:#68bdff;background:#0d2840;border:1px solid #23689b;box-shadow:0 0 30px #168cff25}.admin-modal-close{position:absolute;top:12px;left:12px;width:30px;height:30px;border:0;border-radius:9px;background:#101d29;color:#8ba1b6;cursor:pointer;font-size:20px}.admin-login-submit{width:100%;margin-top:12px;border:0;cursor:pointer}.admin-login-error{margin-top:12px;color:#ff9da8;font-size:13px}.admin-login-error.hidden{display:none}
 #admin{scroll-margin-top:90px}.admin-grid .card h3{color:#e8f4ff}.rule-group-items{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:800px){.rule-group-items{grid-template-columns:1fr}.admin-secret-btn{width:20px;height:20px;font-size:11px;opacity:.58}}
+
+button:disabled{opacity:.6;cursor:not-allowed;filter:saturate(.6)}
+
+
+/* v7 — interactive hero + drag-to-rules */
+.hero-visual{
+  --rx:0deg;--ry:0deg;--mx:50%;--my:50%;
+  transform:perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry)) translateZ(0);
+  transform-style:preserve-3d;
+  will-change:transform;
+  transition:transform .18s cubic-bezier(.22,.8,.28,1),box-shadow .25s ease,border-color .25s ease;
+  isolation:isolate;
+}
+.hero-visual.tilting{transition:box-shadow .2s ease,border-color .2s ease;box-shadow:0 48px 115px #0009,0 0 0 1px #168cff22,0 0 55px #168cff18;border-color:#28577e}
+.hero-visual:after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;background:linear-gradient(135deg,#58b9ff22,transparent 24%,transparent 72%,#168cff1f);opacity:.7;z-index:6}
+.tilt-layer{transform-style:preserve-3d;will-change:transform;transition:transform .16s cubic-bezier(.22,.8,.28,1)}
+.layer-head{transform:translateZ(28px)}
+.layer-core{transform:translate(-50%,-50%) translateZ(62px)}
+.layer-stats{transform:translateZ(40px)}
+.tilt-glare{position:absolute;inset:-35%;z-index:5;pointer-events:none;background:radial-gradient(circle at var(--mx) var(--my),#9ed7ff27 0,transparent 22%),linear-gradient(115deg,transparent 35%,#ffffff0c 49%,transparent 61%);mix-blend-mode:screen;opacity:.85;transform:translateZ(78px)}
+.core-ring{animation:turboRingBreath 3.8s ease-in-out infinite}
+.core-logo{animation:turboLogoFloat 4.2s ease-in-out infinite}
+@keyframes turboRingBreath{0%,100%{filter:brightness(1);box-shadow:0 0 55px #168cff2d}50%{filter:brightness(1.12);box-shadow:0 0 86px #168cff52}}
+@keyframes turboLogoFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.025)}}
+
+.rules-drag-launcher{grid-column:1/-1;display:grid;grid-template-columns:minmax(220px,.62fr) minmax(360px,1.38fr);gap:24px;align-items:center;margin-top:-20px;padding:18px 20px;border:1px solid #17334b;border-radius:22px;background:linear-gradient(135deg,#08131fdb,#07101ae6);box-shadow:0 20px 55px #0004;overflow:hidden;position:relative}
+.rules-drag-launcher:before{content:"";position:absolute;width:260px;height:260px;border-radius:50%;background:#168cff18;filter:blur(70px);right:-70px;top:-140px;pointer-events:none}
+.rules-drag-copy{display:grid;gap:2px;position:relative;z-index:2}.drag-kicker{font-size:9px;letter-spacing:3px;color:#4baeff;font-weight:900}.rules-drag-copy strong{font-size:18px;color:#f3f9ff}.rules-drag-copy small{font-size:11px;color:#667f96}
+.rules-drag-track{--drag:0px;position:relative;height:64px;border-radius:18px;border:1px solid #1e4666;background:linear-gradient(180deg,#07111b,#050b11);box-shadow:inset 0 0 0 1px #ffffff04,inset 0 8px 25px #0006;overflow:hidden;touch-action:none;user-select:none}
+.rules-drag-track:after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 0 32%,#4bb7ff0c 46%,transparent 60%);background-size:230% 100%;animation:dragShimmer 2.4s linear infinite;pointer-events:none}
+@keyframes dragShimmer{to{background-position:-230% 0}}
+.rules-drag-fill{position:absolute;left:0;top:0;bottom:0;width:calc(var(--drag) + 32px);max-width:100%;background:linear-gradient(90deg,#0875df66,#168cff2e);box-shadow:12px 0 34px #168cff2f;pointer-events:none;transition:width .08s linear}
+.rules-drag-thumb{position:absolute;left:8px;top:8px;width:48px;height:48px;border:0;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#39b4ff,#0877e8);color:#fff;font-size:24px;font-weight:900;cursor:grab;box-shadow:0 8px 24px #087ee855,0 0 0 1px #80ccff42 inset;transform:translateX(var(--drag));will-change:transform;transition:transform .16s cubic-bezier(.22,.9,.3,1),filter .2s ease,box-shadow .2s ease;z-index:4}
+.rules-drag-thumb:active,.rules-drag-track.dragging .rules-drag-thumb{cursor:grabbing;transition:none;filter:brightness(1.12);box-shadow:0 10px 35px #168cff88,0 0 0 1px #b3e1ff7a inset}
+.rules-drag-thumb span{display:block;animation:dragNudge 1.25s ease-in-out infinite}
+@keyframes dragNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+.drag-flow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:9px;color:#2c87ca;font-size:22px;opacity:.62;direction:ltr;pointer-events:none}.drag-flow span{animation:flowArrow 1.2s ease-in-out infinite}.drag-flow span:nth-child(2){animation-delay:.14s}.drag-flow span:nth-child(3){animation-delay:.28s}@keyframes flowArrow{0%,100%{opacity:.2;transform:translateX(-3px)}50%{opacity:1;transform:translateX(3px)}}
+.rules-drag-track.completed{border-color:#39b4ff;box-shadow:0 0 0 1px #168cff44,inset 0 0 32px #168cff22}.rules-drag-track.completed .rules-drag-thumb{filter:brightness(1.18)}
+
+@media(max-width:980px){.rules-drag-launcher{grid-template-columns:1fr;margin-top:0}.rules-drag-copy{text-align:center}.rules-drag-track{height:60px}}
+@media(max-width:620px){.rules-drag-launcher{padding:15px;border-radius:18px;gap:13px}.rules-drag-track{height:56px}.rules-drag-thumb{width:42px;height:42px;top:6px;left:6px;border-radius:12px}.rules-drag-copy strong{font-size:16px}.hero-visual{transform:none!important}.tilt-glare{display:none}.layer-head{transform:none}.layer-core{transform:translate(-50%,-50%)}.layer-stats{transform:none}}
+@media(prefers-reduced-motion:reduce){.hero-visual,.tilt-layer,.core-ring,.core-logo,.rules-drag-thumb span,.drag-flow span,.rules-drag-track:after{animation:none!important;transition:none!important}}

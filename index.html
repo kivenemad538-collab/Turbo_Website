@@ -40,10 +40,26 @@
         <div class="hero-actions"><a class="btn primary" href="#apply">ابدأ التقديم</a><a class="btn ghost" href="#rules">اقرأ القوانين</a></div>
         <div class="server-state"><i></i><span id="applyState">جاري الاتصال بـ Turbo...</span></div>
       </div>
-      <div class="hero-visual">
-        <div class="visual-head"><span>SERVER</span><b>TURBO CITY</b><span>ONLINE</span></div>
-        <div class="turbo-core"><div class="core-ring"></div><div class="core-text"><img class="core-logo" src="turbo-logo.png?v=6" alt="Turbo"><small>TURBO</small></div></div>
-        <div class="visual-stats"><div><strong>24/7</strong><span>مجتمع فعال</span></div><div><strong>RP</strong><span>Roleplay</span></div><div><strong>∞</strong><span>سيناريوهات</span></div></div>
+      <div class="hero-visual" id="turboTiltCard">
+        <div class="tilt-glare" aria-hidden="true"></div>
+        <div class="visual-head tilt-layer layer-head"><span>SERVER</span><b>TURBO CITY</b><span>ONLINE</span></div>
+        <div class="turbo-core tilt-layer layer-core"><div class="core-ring"></div><div class="core-text"><img class="core-logo" src="turbo-logo.png?v=7" alt="Turbo"><small>TURBO</small></div></div>
+        <div class="visual-stats tilt-layer layer-stats"><div><strong>24/7</strong><span>مجتمع فعال</span></div><div><strong>RP</strong><span>Roleplay</span></div><div><strong>∞</strong><span>سيناريوهات</span></div></div>
+      </div>
+
+      <div class="rules-drag-launcher" id="rulesDragLauncher">
+        <div class="rules-drag-copy">
+          <span class="drag-kicker">TURBO RULES</span>
+          <strong>اسحب لعرض قوانين السيرفر</strong>
+          <small>اسحب الزر الأزرق للنهاية</small>
+        </div>
+        <div class="rules-drag-track" id="rulesDragTrack" dir="ltr">
+          <div class="drag-flow" aria-hidden="true"><span>›</span><span>›</span><span>›</span></div>
+          <div class="rules-drag-fill" id="rulesDragFill"></div>
+          <button class="rules-drag-thumb" id="rulesDragThumb" type="button" aria-label="اسحب لفتح قوانين السيرفر">
+            <span>⇢</span>
+          </button>
+        </div>
       </div>
     </section>
 

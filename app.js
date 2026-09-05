@@ -198,13 +198,118 @@ async function openAdminPanel(){
     toast(e?.status===403?'غير مصرح لك بفتح لوحة التحكم.':'تعذر فتح لوحة التحكم.');
   }
 }
-async function renderAdmin(){const st=await api('/api/admin/state');$('#adminBox').innerHTML=`<div class="admin-grid"><div class="card"><h3>التقديم</h3><p>الحالة: <b>${st.settings.applicationsOpen?'مفتوح':'مغلق'}</b></p><button class="${st.settings.applicationsOpen?'danger':'btn primary'}" onclick="toggleApps(${!st.settings.applicationsOpen})">${st.settings.applicationsOpen?'قفل التقديم':'فتح التقديم'}</button></div><div class="card"><h3>الطلبات</h3><div class="list">${[...st.applications].reverse().slice(0,20).map(a=>`<div class="item"><span>#${a.number} ${esc(a.realName)}<br><small>${statusText(a.status)} • ${a.discordId}</small></span><span>${a.status==='pre_accepted'?`<button class="smallbtn" onclick="voicePass('${a.discordId}')">نجح بالمقابلة</button>`:''} <button class="smallbtn" onclick="resetUser('${a.discordId}')">سماح بإعادة التقديم</button></span></div>`).join('')||'لا يوجد'}</div></div><div class="card"><h3>إضافة صانع محتوى</h3><form id="creatorForm" class="form-grid"><div class="field"><input name="name" placeholder="الاسم" required></div><div class="field"><input name="order" type="number" placeholder="الترتيب" value="1"></div><div class="field full"><input name="image" placeholder="لينك الصورة" required></div><div class="field full"><input name="url" placeholder="لينك الصفحة" required></div><div class="field"><select name="platform"><option value="youtube">YouTube</option><option value="twitch">Twitch</option><option value="other">Other</option></select></div><div class="field"><input name="platformId" placeholder="Channel ID / Twitch login"></div><button class="btn primary" type="submit">إضافة</button></form><div class="list">${st.creators.map(c=>`<div class="item"><span>${esc(c.name)} ${c.isLive?'🔴':''}</span><button class="danger" onclick="delCreator('${c.id}')">حذف</button></div>`).join('')}</div></div><div class="card"><h3>مواعيد المقابلات</h3><form id="slotForm"><div class="field"><input name="at" type="datetime-local" required></div><div class="field"><input name="note" placeholder="ملاحظة / روم المقابلة"></div><br><button class="btn primary">إضافة موعد</button></form><div class="list">${st.interviewSlots.map(s=>`<div class="item"><span>${new Date(s.at).toLocaleString('ar-EG')} ${s.bookedBy?'• محجوز':''}</span>${!s.bookedBy?`<button class="danger" onclick="delSlot('${s.id}')">حذف</button>`:''}</div>`).join('')}</div></div></div>`;$('#creatorForm').onsubmit=addCreator;$('#slotForm').onsubmit=addSlot}
+async function renderAdmin(){const st=await api('/api/admin/state');$('#adminBox').innerHTML=`<div class="admin-grid"><div class="card"><h3>التقديم</h3><p>الحالة: <b>${st.settings.applicationsOpen?'مفتوح':'مغلق'}</b></p><button class="${st.settings.applicationsOpen?'danger':'btn primary'}" onclick="toggleApps(${!st.settings.applicationsOpen})">${st.settings.applicationsOpen?'قفل التقديم':'فتح التقديم'}</button></div><div class="card"><h3>الطلبات</h3><div class="list">${[...st.applications].reverse().slice(0,20).map(a=>`<div class="item"><span>#${a.number} ${esc(a.realName)}<br><small>${statusText(a.status)} • ${a.discordId}</small></span><span>${a.status==='pre_accepted'?`<button class="smallbtn" onclick="voicePass('${a.discordId}')">نجح بالمقابلة</button>`:''} <button class="smallbtn" onclick="resetUser('${a.discordId}')">سماح بإعادة التقديم</button></span></div>`).join('')||'لا يوجد'}</div></div><div class="card"><h3>إضافة صانع محتوى</h3><form id="creatorForm" class="form-grid"><div class="field"><input name="name" placeholder="الاسم" required></div><div class="field"><input name="order" type="number" placeholder="الترتيب" value="1"></div><div class="field full"><input name="image" placeholder="لينك الصورة" required></div><div class="field full"><input name="url" placeholder="لينك الصفحة" required></div><div class="field"><select name="platform"><option value="youtube">YouTube</option><option value="twitch">Twitch</option><option value="other">Other</option></select></div><div class="field"><input name="platformId" placeholder="Channel ID / Twitch login"></div><button class="btn primary" type="submit">إضافة</button></form><div class="list">${st.creators.map(c=>`<div class="item"><span>${esc(c.name)} ${c.isLive?'🔴':''}</span><button class="danger" onclick="delCreator('${c.id}')">حذف</button></div>`).join('')}</div></div><div class="card"><h3>مواعيد المقابلات</h3><form id="slotForm"><div class="field"><input name="at" type="datetime-local" required></div><div class="field"><input name="note" placeholder="ملاحظة / روم المقابلة"></div><br><button class="btn primary" id="addSlotBtn" type="submit">إضافة موعد</button></form><div class="list">${st.interviewSlots.map(s=>`<div class="item"><span>${new Date(s.at).toLocaleString('ar-EG')} ${s.bookedBy?'• محجوز':''}</span>${!s.bookedBy?`<button class="danger" onclick="delSlot('${s.id}')">حذف</button>`:''}</div>`).join('')}</div></div></div>`;$('#creatorForm').onsubmit=addCreator;$('#slotForm').onsubmit=addSlot}
 window.toggleApps=async v=>{await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({applicationsOpen:v})});pub=await api('/api/public');renderPublic();renderAdmin();toast(v?'تم فتح التقديم':'تم قفل التقديم')};
 window.voicePass=async id=>{await api(`/api/admin/users/${id}/voice-pass`,{method:'POST',body:'{}'});toast('تم منح تصريح الدخول');renderAdmin()};
 window.resetUser=async id=>{await api(`/api/admin/users/${id}/reset`,{method:'POST',body:'{}'});toast('تم السماح بإعادة التقديم');renderAdmin()};
 async function addCreator(e){e.preventDefault();const f=Object.fromEntries(new FormData(e.target));f.order=Number(f.order||0);await api('/api/admin/creators',{method:'POST',body:JSON.stringify(f)});toast('تمت إضافة صانع المحتوى');renderAdmin();pub=await api('/api/public');renderPublic()}
 window.delCreator=async id=>{await api(`/api/admin/creators/${id}`,{method:'DELETE'});renderAdmin();pub=await api('/api/public');renderPublic()};
-async function addSlot(e){e.preventDefault();const f=Object.fromEntries(new FormData(e.target));await api('/api/admin/interviews',{method:'POST',body:JSON.stringify(f)});toast('تمت إضافة الموعد');renderAdmin();pub=await api('/api/public');renderPublic()}
+async function addSlot(e){
+  e.preventDefault();
+  const form=e.target;
+  const btn=form.querySelector('button[type="submit"],button');
+  const raw=String(new FormData(form).get('at')||'').trim();
+  const note=String(new FormData(form).get('note')||'').trim();
+  if(!raw){toast('اختار تاريخ ووقت الموعد');return}
+  const localDate=new Date(raw);
+  if(Number.isNaN(localDate.getTime())){toast('التاريخ أو الوقت غير صحيح');return}
+  if(localDate.getTime()<=Date.now()+60000){toast('اختار موعد بعد الوقت الحالي');return}
+  const oldText=btn?.textContent||'إضافة موعد';
+  if(btn){btn.disabled=true;btn.textContent='جاري الإضافة...'}
+  try{
+    await api('/api/admin/interviews',{method:'POST',body:JSON.stringify({at:localDate.toISOString(),note})});
+    toast('✅ تمت إضافة الموعد');
+    form.reset();
+    await renderAdmin();
+    pub=await api('/api/public');
+    renderPublic();
+  }catch(err){
+    console.error('ADD_SLOT_FAILED',err);
+    const map={INVALID_INTERVIEW_DATE:'التاريخ غير صالح أو الموعد في الماضي',ADMIN_ONLY:'الحساب الحالي غير مسموح له بإدارة المواعيد',LOGIN_REQUIRED:'سجل دخول Discord من جديد'};
+    toast('❌ '+(map[err?.message]||`فشل إضافة الموعد: ${err?.message||'خطأ غير معروف'}`));
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent=oldText}
+  }
+}
 window.delSlot=async id=>{await api(`/api/admin/interviews/${id}`,{method:'DELETE'});renderAdmin();pub=await api('/api/public');renderPublic()};
 window.oauthLogin=oauthLogin;
 init();
+
+
+// v7: 3D hero interaction + drag-to-rules launcher
+(function initTurboMotion(){
+  const card=document.getElementById('turboTiltCard');
+  if(card && window.matchMedia('(pointer:fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    let frame=0;
+    const setTilt=(x,y)=>{
+      const r=card.getBoundingClientRect();
+      const px=Math.max(0,Math.min(1,(x-r.left)/r.width));
+      const py=Math.max(0,Math.min(1,(y-r.top)/r.height));
+      const ry=(px-.5)*9;
+      const rx=(.5-py)*7;
+      cancelAnimationFrame(frame);
+      frame=requestAnimationFrame(()=>{
+        card.style.setProperty('--rx',rx.toFixed(2)+'deg');
+        card.style.setProperty('--ry',ry.toFixed(2)+'deg');
+        card.style.setProperty('--mx',(px*100).toFixed(1)+'%');
+        card.style.setProperty('--my',(py*100).toFixed(1)+'%');
+      });
+    };
+    card.addEventListener('pointerenter',()=>card.classList.add('tilting'));
+    card.addEventListener('pointermove',e=>setTilt(e.clientX,e.clientY));
+    card.addEventListener('pointerleave',()=>{
+      card.classList.remove('tilting');
+      card.style.setProperty('--rx','0deg');card.style.setProperty('--ry','0deg');
+      card.style.setProperty('--mx','50%');card.style.setProperty('--my','50%');
+    });
+  }
+
+  const track=document.getElementById('rulesDragTrack');
+  const thumb=document.getElementById('rulesDragThumb');
+  const fill=document.getElementById('rulesDragFill');
+  if(!track || !thumb || !fill) return;
+  let dragging=false,startX=0,startDrag=0,current=0,max=0;
+  const recalc=()=>{max=Math.max(0,track.clientWidth-thumb.offsetWidth-16)};
+  const setDrag=v=>{
+    recalc();current=Math.max(0,Math.min(max,v));
+    track.style.setProperty('--drag',current+'px');
+  };
+  const finish=()=>{
+    if(!dragging)return;
+    dragging=false;track.classList.remove('dragging');
+    recalc();
+    if(max && current/max>=.84){
+      current=max;track.style.setProperty('--drag',max+'px');track.classList.add('completed');
+      if(navigator.vibrate) navigator.vibrate(28);
+      setTimeout(()=>{
+        const rules=document.getElementById('rules');
+        location.hash='rules';
+        rules?.scrollIntoView({behavior:'smooth',block:'start'});
+        setTimeout(()=>{track.classList.remove('completed');setDrag(0)},850);
+      },220);
+    }else setDrag(0);
+  };
+  const begin=e=>{
+    if(e.button!==undefined && e.button!==0)return;
+    recalc();dragging=true;track.classList.add('dragging');startX=e.clientX;startDrag=current;
+    thumb.setPointerCapture?.(e.pointerId);e.preventDefault();
+  };
+  thumb.addEventListener('pointerdown',begin);
+  track.addEventListener('pointerdown',e=>{
+    if(e.target===thumb || thumb.contains(e.target))return;
+    recalc();dragging=true;track.classList.add('dragging');
+    const r=track.getBoundingClientRect();current=Math.max(0,Math.min(max,e.clientX-r.left-thumb.offsetWidth/2));
+    track.style.setProperty('--drag',current+'px');startX=e.clientX;startDrag=current;
+    track.setPointerCapture?.(e.pointerId);e.preventDefault();
+  });
+  window.addEventListener('pointermove',e=>{if(dragging)setDrag(startDrag+(e.clientX-startX))},{passive:true});
+  window.addEventListener('pointerup',finish);
+  window.addEventListener('pointercancel',finish);
+  window.addEventListener('resize',()=>setDrag(Math.min(current,max)));
+  thumb.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'){setDrag(current+Math.max(24,max*.12));e.preventDefault()}
+    if(e.key==='ArrowLeft'){setDrag(current-Math.max(24,max*.12));e.preventDefault()}
+    if(e.key==='Enter' || e.key===' '){setDrag(max);dragging=true;finish();e.preventDefault()}
+  });
+  setDrag(0);
+})();
