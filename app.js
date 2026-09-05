@@ -370,3 +370,62 @@ init();
   });
   mo.observe(document.body,{childList:true,subtree:true});
 })();
+
+// ===== V11: animated TURBO loader on actionable clicks =====
+(()=>{
+  const loader=document.getElementById('turboActionLoader');
+  if(!loader) return;
+  let timer=null;
+  const showTurboLoader=(minMs=560)=>{
+    clearTimeout(timer);
+    loader.classList.add('is-active');
+    loader.setAttribute('aria-hidden','false');
+    document.documentElement.style.setProperty('--turbo-loader-active','1');
+    timer=setTimeout(hideTurboLoader,minMs);
+  };
+  const hideTurboLoader=()=>{
+    loader.classList.remove('is-active');
+    loader.setAttribute('aria-hidden','true');
+    document.documentElement.style.removeProperty('--turbo-loader-active');
+  };
+  window.showTurboLoader=showTurboLoader;
+  window.hideTurboLoader=hideTurboLoader;
+
+  // Links get a short cinematic transition before navigation.
+  document.addEventListener('click',e=>{
+    const el=e.target.closest('a[href],button,[role="button"]');
+    if(!el || loader.contains(el) || el.disabled) return;
+    if(el.matches('.rules-drag-thumb') || el.closest('.rules-drag-track')) return; // drag control, not a normal click
+    if(el.matches('button[type="submit"]')){ showTurboLoader(720); return; }
+
+    if(el.tagName==='A'){
+      const href=el.getAttribute('href')||'';
+      if(!href || href==='javascript:void(0)') return;
+      // Same-page section links: animate briefly, then scroll/change hash.
+      if(href.startsWith('#')){
+        e.preventDefault();
+        showTurboLoader(430);
+        setTimeout(()=>{
+          hideTurboLoader();
+          location.hash=href.slice(1);
+          document.querySelector(href)?.scrollIntoView({behavior:'smooth',block:'start'});
+        },390);
+        return;
+      }
+      // External / normal navigation. Respect target=_blank.
+      e.preventDefault();
+      const newTab=el.target==='_blank';
+      showTurboLoader(650);
+      setTimeout(()=>{
+        if(newTab) window.open(el.href,'_blank','noopener');
+        else location.href=el.href;
+      },560);
+      return;
+    }
+    // Regular non-submit UI buttons: visual feedback without blocking their handler.
+    showTurboLoader(480);
+  },true);
+
+  // Never leave the overlay hanging after tab restore/back-forward cache.
+  window.addEventListener('pageshow',()=>setTimeout(hideTurboLoader,80));
+})();
