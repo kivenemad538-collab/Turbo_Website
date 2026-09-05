@@ -8,7 +8,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2800)}
 function showSetup(){const b=$('#setupBanner');b.classList.remove('hidden');b.innerHTML='⚠️ تسجيل Discord غير مربوط لسه. افتح <b>config.js</b> وحط رابط Railway الحقيقي مكان YOUR-RAILWAY-DOMAIN.'}
-function oauthLogin(){if(!API_CONFIGURED){showSetup();toast('حط رابط Railway في config.js الأول');return}location.href=`${API}/auth/discord`}
+function oauthLogin(e){if(e&&e.preventDefault)e.preventDefault();if(!API_CONFIGURED){showSetup();toast('رابط Railway غير مضبوط');return}window.location.assign(`${API}/auth/discord`)}
 
 async function api(path,opt={}){
   if(!API_CONFIGURED) throw Object.assign(new Error('API_NOT_CONFIGURED'),{status:0});
@@ -29,7 +29,7 @@ async function init(){
   consumeToken();
   $('#menu').onclick=()=>$('#nav').classList.toggle('open');
   document.querySelectorAll('#nav a').forEach(a=>a.onclick=()=>$('#nav').classList.remove('open'));
-  $('#loginBtn').onclick=oauthLogin;
+  $('#loginBtn').href=`${API || 'https://botsturbo-production.up.railway.app'}/auth/discord`; $('#loginBtn').onclick=oauthLogin;
 
   if(!API_CONFIGURED){
     showSetup();
