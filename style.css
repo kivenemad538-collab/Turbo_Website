@@ -10,3 +10,16 @@ main{width:min(1240px,90vw);margin:auto}.hero{min-height:calc(100vh - 78px);disp
 #adminLink{color:#74c4ff!important;border:1px solid #1e5d8c;border-radius:10px;padding:8px 12px;background:#0a1b2a}
 .rules-grid{display:block}.rule-group{margin-bottom:22px;padding:20px;border:1px solid #17314a;background:linear-gradient(145deg,#091521e8,#06101ae8);border-radius:20px}.rule-group-title{display:flex;align-items:center;gap:12px;margin-bottom:14px}.rule-group-title>span{display:grid;place-items:center;width:38px;height:38px;border:1px solid #2374ad;border-radius:10px;color:#38aaff;font-size:11px;font-weight:900}.rule-group-title h3{margin:0;font-size:21px}.rule-group-items{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.rule-group .rule{height:100%}
 @media(max-width:800px){.rule-group-items{grid-template-columns:1fr}.core-text .core-logo{width:105px;height:105px}}
+
+
+/* v5: real logo + hidden password admin entry */
+.brand-logo{background:#02070d!important;border:1px solid #168cff!important;box-shadow:0 0 24px #168cff45!important}
+.brand-logo img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;border-radius:50%!important}
+.core-text .core-logo{display:block;width:150px!important;height:150px!important;object-fit:contain!important;background:#02070d;border:1px solid #168cff55}
+.admin-secret-btn{position:absolute;left:8px;bottom:7px;width:11px;height:11px;padding:0;border:1px solid #17304a;border-radius:50%;background:#0c1722;opacity:.18;cursor:pointer;z-index:80;transition:.2s}
+.admin-secret-btn:hover{opacity:.75;box-shadow:0 0 10px #168cff88;background:#168cff}
+.admin-modal{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#02060bd9;backdrop-filter:blur(12px);padding:20px}
+.admin-modal.hidden{display:none}.admin-modal-card{position:relative;width:min(410px,92vw);padding:30px;border:1px solid #1d4261;border-radius:22px;background:linear-gradient(150deg,#0b1825,#050b12);box-shadow:0 28px 100px #000b;text-align:center}
+.admin-modal-card h3{font-size:25px;margin:12px 0 5px}.admin-modal-card p{color:#7891a8;margin:0 0 20px}.admin-lock-icon{width:54px;height:54px;margin:auto;border-radius:17px;display:grid;place-items:center;color:#68bdff;background:#0d2840;border:1px solid #23689b;box-shadow:0 0 30px #168cff25}.admin-modal-close{position:absolute;top:12px;left:12px;width:30px;height:30px;border:0;border-radius:9px;background:#101d29;color:#8ba1b6;cursor:pointer;font-size:20px}.admin-login-submit{width:100%;margin-top:12px;border:0;cursor:pointer}.admin-login-error{margin-top:12px;color:#ff9da8;font-size:13px}.admin-login-error.hidden{display:none}
+#admin{scroll-margin-top:90px}.admin-grid .card h3{color:#e8f4ff}.rule-group-items{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:800px){.rule-group-items{grid-template-columns:1fr}.admin-secret-btn{width:13px;height:13px;opacity:.3}}

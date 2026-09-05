@@ -9,18 +9,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.1">
+  <link rel="stylesheet" href="style.css?v=5.0">
 </head>
 <body>
   <div class="bg-grid"></div><div class="glow glow-a"></div><div class="glow glow-b"></div>
 
   <header class="topbar">
     <a class="brand" href="#home">
-      <span class="brand-logo"><img src="turbo-logo.png" alt="Turbo"></span>
+      <span class="brand-logo"><img src="turbo-logo.png?v=5" alt="Turbo"></span>
       <span class="brand-name"><b>TURBO</b><small>ROLEPLAY</small></span>
     </a>
     <nav id="nav">
-      <a href="#home">الرئيسية</a><a href="#about">من نحن</a><a href="#creators">صناع المحتوى</a><a href="#rules">القوانين</a><a href="#apply">التقديم</a><a href="#status">حالة التقديم</a><a id="adminLink" class="hidden" href="#admin">لوحة التحكم</a>
+      <a href="#home">الرئيسية</a><a href="#about">من نحن</a><a href="#creators">صناع المحتوى</a><a href="#rules">القوانين</a><a href="#apply">التقديم</a><a href="#status">حالة التقديم</a>
     </nav>
     <div class="top-actions">
       <button id="menu" class="menu-btn" type="button">☰</button>
@@ -28,6 +28,7 @@
         <span class="discord-icon">D</span><span>تسجيل دخول Discord</span>
       </a>
     </div>
+    <button id="adminSecretBtn" class="admin-secret-btn" type="button" aria-label="لوحة التحكم" title=""></button>
   </header>
 
   <main>
@@ -41,7 +42,7 @@
       </div>
       <div class="hero-visual">
         <div class="visual-head"><span>SERVER</span><b>TURBO CITY</b><span>ONLINE</span></div>
-        <div class="turbo-core"><div class="core-ring"></div><div class="core-text"><img class="core-logo" src="turbo-logo.png" alt="Turbo"><small>TURBO</small></div></div>
+        <div class="turbo-core"><div class="core-ring"></div><div class="core-text"><img class="core-logo" src="turbo-logo.png?v=5" alt="Turbo"><small>TURBO</small></div></div>
         <div class="visual-stats"><div><strong>24/7</strong><span>مجتمع فعال</span></div><div><strong>RP</strong><span>Roleplay</span></div><div><strong>∞</strong><span>سيناريوهات</span></div></div>
       </div>
     </section>
@@ -72,10 +73,12 @@
     </section>
 
     <section id="admin" class="section hidden"><div class="section-head"><span>⚙</span><div><small>CONTROL PANEL</small><h2>لوحة التحكم</h2></div></div><div id="adminBox"></div></section>
+
+    <div id="adminLoginModal" class="admin-modal hidden"><div class="admin-modal-card"><button id="adminModalClose" class="admin-modal-close" type="button">×</button><div class="admin-lock-icon">◆</div><h3>لوحة تحكم Turbo</h3><p>أدخل كلمة مرور الإدارة.</p><form id="adminPasswordForm"><div class="field"><input id="adminPasswordInput" type="password" autocomplete="current-password" placeholder="كلمة المرور" required></div><button class="btn primary admin-login-submit" type="submit">دخول</button></form><div id="adminLoginError" class="admin-login-error hidden">كلمة المرور غير صحيحة.</div></div></div>
   </main>
 
-  <footer><div class="brand footer-brand"><span class="brand-logo small"><img src="turbo-logo.png" alt="Turbo"></span><span class="brand-name"><b>TURBO</b><small>ROLEPLAY</small></span></div><span>© 2026 Turbo Roleplay</span></footer>
+  <footer><div class="brand footer-brand"><span class="brand-logo small"><img src="turbo-logo.png?v=5" alt="Turbo"></span><span class="brand-name"><b>TURBO</b><small>ROLEPLAY</small></span></div><span>© 2026 Turbo Roleplay</span></footer>
   <div id="setupBanner" class="setup-banner hidden"></div><div id="toast"></div>
-  <script src="config.js?v=3.1"></script><script src="app.js?v=3.1"></script>
+  <script src="config.js?v=5.0"></script><script src="app.js?v=5.0"></script>
 </body>
 </html>
