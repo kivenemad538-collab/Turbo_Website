@@ -325,17 +325,17 @@ async function renderAdmin(){
   const canManageStaff=!!st.viewer?.isManager;
   const canManageManagers=!!st.viewer?.isOwner;
   const manageableStaff=(st.panelAdmins||[]).filter(a=>canManageManagers || a.role!=='manager');
-  const staffControls=canManageStaff?`<div class="card manager-only-card">
-      <div class="manager-badge">${canManageManagers?'OWNER':'MANAGER'}</div>
-      <h3>إدارة طاقم لوحة التحكم</h3>
-      <p>${canManageManagers?'ضيف Manager أو Admin':'ضيف Admin'} عن طريق Discord User ID. بيانات الحساب هتظهر تلقائيًا من Discord.</p>
+  const staffControls=`<div class="card manager-only-card staff-permissions-card">
+      <div class="manager-badge">${viewerLabel}</div>
+      <h3>إدارة صلاحيات اللوحة</h3>
+      ${canManageStaff?`<p>${canManageManagers?'أنت الـ Owner. تقدر تضيف Manager أو Admin.':'أنت Manager. تقدر تضيف Admin.'} اكتب Discord User ID وبيانات الحساب هتظهر تلقائيًا.</p>
       <form id="panelAdminForm" class="inline-admin-form staff-add-form">
         <input name="discordId" inputmode="numeric" placeholder="Discord User ID" required>
         ${canManageManagers?'<select name="role" required><option value="admin">Admin</option><option value="manager">Manager</option></select>':'<input type="hidden" name="role" value="admin">'}
-        <button class="smallbtn" type="submit">إضافة</button>
+        <button class="smallbtn" type="submit">إضافة إداري</button>
       </form>
-      <div class="staff-manage-list">${manageableStaff.map(a=>staffCard(a,true)).join('')||'<div class="notice">لا يوجد Admin مضاف.</div>'}</div>
-    </div>`:'';
+      <div class="staff-manage-list">${manageableStaff.map(a=>staffCard(a,true)).join('')||'<div class="notice">لا يوجد إداريون مضافون بعد.</div>'}</div>`:`<div class="notice">حسابك داخل اللوحة بصلاحية <b>${viewerLabel}</b>. إضافة Admin أو Manager متاحة للـ Owner والـ Manager فقط.</div>`}
+    </div>`;
   const ownerControls=st.viewer?.isOwner?`<div class="card manager-only-card">
       <div class="manager-badge">DATA SAFE</div>
       <h3>نسخة احتياطية</h3>

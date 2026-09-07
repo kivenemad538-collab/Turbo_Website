@@ -183,3 +183,10 @@ body.portal-open{overflow:hidden}
 
 @media(max-width:900px){.character-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-control-grid{grid-template-columns:1fr}.status-visual{grid-template-columns:130px 1fr}.status-art{width:120px;height:120px}}
 @media(max-width:620px){.apply-launch-card{flex-direction:column;align-items:stretch}.character-grid{grid-template-columns:1fr}.portal-shell{width:94vw;margin-top:10px}.portal-body{padding-top:32px}.portal-brand small{display:none}.portal-intro h2{font-size:36px}.portal-back{position:static;margin-bottom:18px}.status-visual{grid-template-columns:1fr;text-align:center}.status-art{width:115px;height:115px}.status-art-copy h3{font-size:26px}.cursor-aura,.cursor-dot{display:none}}
+
+/* V16.1 staff permissions visibility */
+.staff-permissions-card{position:relative;overflow:hidden;border-color:#1d5a87!important;background:linear-gradient(145deg,rgba(8,24,38,.96),rgba(4,12,21,.98))!important;box-shadow:0 18px 60px rgba(0,119,255,.08)}
+.staff-permissions-card:before{content:"";position:absolute;inset:0 auto auto 0;width:160px;height:160px;background:radial-gradient(circle,rgba(29,154,255,.16),transparent 70%);pointer-events:none}
+.staff-add-form{display:grid;grid-template-columns:1fr 180px auto;gap:10px;align-items:center;margin:16px 0}
+.staff-add-form input,.staff-add-form select{height:48px;border:1px solid #1d496a;background:#050d15;color:#fff;border-radius:12px;padding:0 14px}
+@media(max-width:760px){.staff-add-form{grid-template-columns:1fr}.staff-add-form select,.staff-add-form button{width:100%}}
