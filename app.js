@@ -262,23 +262,94 @@ window.closeApplication=()=>{$('#applicationReview')?.classList.add('hidden')};
 window.rejectApplication=async id=>{const reason=prompt('اكتب سبب الرفض. سيظهر للمتقدم:');if(reason===null)return;await applicationAction(id,'reject',reason)};
 window.voiceReject=async id=>{const reason=prompt('سبب رفض المقابلة الصوتية؟ اتركه فاضي للرفض بدون سبب.');if(reason===null)return;await applicationAction(id,'voice_reject',reason)};
 window.applicationAction=async(id,action,reason='')=>{try{await api(`/api/admin/applications/${id}/action`,{method:'POST',body:JSON.stringify({action,reason})});toast('تم تحديث حالة التقديم');await renderAdmin();if($('#applicationReview')&&!$('#applicationReview').classList.contains('hidden')){const a=adminState?.applications?.find(x=>x.id===id);if(a)openApplication(id)}}catch(e){toast(`تعذر تنفيذ العملية: ${e.message}`)}};
+function staffRoleText(role){return role==='owner'?'OWNER':role==='manager'?'MANAGER':'ADMIN'}
+function staffCard(x,canRemove=false){
+  const name=esc(x.globalName||x.username||'Unknown');
+  const user=esc(x.username||'Unknown');
+  const id=esc(x.discordId||'');
+  const avatar=esc(x.avatarUrl||'https://cdn.discordapp.com/embed/avatars/0.png');
+  return `<div class="staff-card">
+    <img class="staff-avatar" src="${avatar}" alt="${name}">
+    <div class="staff-info"><div class="staff-name-row"><b>${name}</b><span class="staff-role role-${esc(x.role||'admin')}">${staffRoleText(x.role)}</span></div><small>@${user}</small><code>${id}</code></div>
+    ${canRemove?`<button class="danger staff-remove" onclick="removePanelAdmin('${id}')">حذف</button>`:''}
+  </div>`;
+}
 async function renderAdmin(){
   adminState=await api('/api/admin/state');
   const st=adminState;
+  const viewerLabel=staffRoleText(st.viewer?.role||'admin');
+  const ownerControls=st.viewer?.isOwner?`<div class="card manager-only-card">
+      <div class="manager-badge">OWNER ONLY</div>
+      <h3>إدارة طاقم لوحة التحكم</h3>
+      <p>ضيف Manager أو Admin عن طريق Discord User ID. بيانات الحساب هتظهر تلقائيًا من Discord.</p>
+      <form id="panelAdminForm" class="inline-admin-form staff-add-form">
+        <input name="discordId" inputmode="numeric" placeholder="Discord User ID" required>
+        <select name="role" required><option value="admin">Admin</option><option value="manager">Manager</option></select>
+        <button class="smallbtn" type="submit">إضافة</button>
+      </form>
+      <div class="staff-manage-list">${(st.panelAdmins||[]).map(a=>staffCard(a,true)).join('')||'<div class="notice">لا يوجد Manager أو Admin مضاف من الموقع.</div>'}</div>
+    </div>
+    <div class="card manager-only-card">
+      <div class="manager-badge">DATA SAFE</div>
+      <h3>نسخة احتياطية</h3>
+      <p>نزّل كل بيانات التقديمات والإدارة قبل حذف أو نقل Railway. تقدر ترفع نفس الملف في المشروع الجديد.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="smallbtn" type="button" onclick="exportTurboBackup()">تنزيل نسخة</button><label class="smallbtn" style="cursor:pointer">استرجاع نسخة<input id="turboBackupFile" type="file" accept="application/json,.json" hidden onchange="importTurboBackup(this)"></label></div>
+    </div>`:'';
+
   $('#adminBox').innerHTML=`<div class="admin-dashboard">
-    <div class="admin-topline"><div><span>TURBO CONTROL</span><h3>لوحة التحكم</h3></div><div class="admin-viewer">${st.viewer?.isManager?'MANAGER':'ADMIN'}</div></div>
+    <div class="admin-topline"><div><span>TURBO CONTROL</span><h3>لوحة التحكم</h3></div><div class="admin-viewer">${viewerLabel}</div></div>
     <div class="admin-summary"><div class="admin-stat"><b>${st.applications.length}</b><span>كل التقديمات</span></div><div class="admin-stat"><b>${st.applications.filter(a=>a.status==='pending').length}</b><span>قيد المراجعة</span></div><div class="admin-stat"><b>${st.applications.filter(a=>['pre_accepted','voice_review'].includes(a.status)).length}</b><span>المرحلة الثانية</span></div><div class="admin-stat"><b>${st.applications.filter(a=>a.status==='voice_passed').length}</b><span>مقبولين نهائيًا</span></div></div>
-    <div class="admin-control-grid"><div class="card admin-settings-card"><h3>حالة التقديم</h3><p>الحالة الحالية: <b>${st.settings.applicationsOpen?'مفتوح':'مغلق'}</b></p><button class="${st.settings.applicationsOpen?'danger':'btn primary'}" onclick="toggleApps(${!st.settings.applicationsOpen})">${st.settings.applicationsOpen?'قفل التقديم':'فتح التقديم'}</button></div>${st.viewer?.isManager?`<div class="card manager-only-card"><div class="manager-badge">MANAGER ONLY</div><h3>إدارة الأدمن</h3><p>ضيف أدمن عادي للوحة التحكم عن طريق Discord User ID.</p><form id="panelAdminForm" class="inline-admin-form"><input name="discordId" inputmode="numeric" placeholder="Discord User ID" required><button class="smallbtn" type="submit">إضافة أدمن</button></form><div class="list">${(st.panelAdmins||[]).map(a=>`<div class="item"><span>${esc(a.discordId)}</span><button class="danger" onclick="removePanelAdmin('${esc(a.discordId)}')">حذف</button></div>`).join('')||'<div class="notice">لا يوجد أدمن مضاف من اللوحة.</div>'}</div></div>`:''}</div>
+    <div class="admin-control-grid"><div class="card admin-settings-card"><h3>حالة التقديم</h3><p>الحالة الحالية: <b>${st.settings.applicationsOpen?'مفتوح':'مغلق'}</b></p><button class="${st.settings.applicationsOpen?'danger':'btn primary'}" onclick="toggleApps(${!st.settings.applicationsOpen})">${st.settings.applicationsOpen?'قفل التقديم':'فتح التقديم'}</button></div>${ownerControls}</div>
     <div class="card applications-card"><div class="applications-toolbar"><div><span>APPLICATION REVIEW</span><h3>مراجعة التقديمات</h3></div><div class="application-search"><input id="applicationSearch" placeholder="ابحث بالاسم أو Discord ID أو رقم التقديم" oninput="filterApplications()"><span>⌕</span></div></div><div class="application-filters"><button class="application-filter-btn active" data-filter="all" onclick="setApplicationFilter('all')">الكل</button><button class="application-filter-btn" data-filter="review" onclick="setApplicationFilter('review')">قيد المراجعة</button><button class="application-filter-btn" data-filter="accepted" onclick="setApplicationFilter('accepted')">المقبولين</button><button class="application-filter-btn" data-filter="rejected" onclick="setApplicationFilter('rejected')">المرفوضين / المحظورين</button></div><div id="applicationList" class="application-list"></div></div>
     <div class="admin-grid"><div class="card"><h3>إضافة صانع محتوى</h3><form id="creatorForm" class="form-grid"><div class="field"><input name="name" placeholder="الاسم" required></div><div class="field"><input name="order" type="number" placeholder="الترتيب" value="1"></div><div class="field full"><input name="image" placeholder="لينك الصورة" required></div><div class="field full"><input name="url" placeholder="لينك الصفحة" required></div><div class="field"><select name="platform"><option value="youtube">YouTube</option><option value="twitch">Twitch</option><option value="other">Other</option></select></div><div class="field"><input name="platformId" placeholder="Channel ID / Twitch login"></div><button class="btn primary" type="submit">إضافة</button></form><div class="list">${st.creators.map(c=>`<div class="item"><span>${esc(c.name)} ${c.isLive?'🔴':''}</span><button class="danger" onclick="delCreator('${c.id}')">حذف</button></div>`).join('')}</div></div><div class="card"><h3>مواعيد المقابلات</h3><form id="slotForm"><div class="field"><input name="at" type="datetime-local" required></div><div class="field"><input name="note" placeholder="ملاحظة / روم المقابلة"></div><br><button class="btn primary" id="addSlotBtn" type="submit">إضافة موعد</button></form><div class="list">${st.interviewSlots.map(s=>`<div class="item"><span>${new Date(s.at).toLocaleString('ar-EG')} ${s.bookedBy?'• محجوز':''}</span>${!s.bookedBy?`<button class="danger" onclick="delSlot('${s.id}')">حذف</button>`:''}</div>`).join('')}</div></div></div>
     <div id="applicationReview" class="application-review hidden"></div>
+    <div class="card staff-directory-card">
+      <div class="staff-directory-head"><div><span>STAFF DIRECTORY</span><h3>إدارة Turbo</h3></div><span class="staff-count">${(st.staffDirectory||[]).length} إداري</span></div>
+      <p>القائمة دي بتظهر فقط للـ Admin والـ Manager والـ Owner.</p>
+      <div class="staff-directory-grid">${(st.staffDirectory||[]).map(a=>staffCard(a,false)).join('')||'<div class="notice">لا توجد بيانات إداريين.</div>'}</div>
+    </div>
   </div>`;
   filterApplications();
   $('#creatorForm').onsubmit=addCreator;$('#slotForm').onsubmit=addSlot;
-  if(st.viewer?.isManager)$('#panelAdminForm').onsubmit=addPanelAdmin;
+  if(st.viewer?.isOwner)$('#panelAdminForm').onsubmit=addPanelAdmin;
 }
-async function addPanelAdmin(e){e.preventDefault();const discordId=String(new FormData(e.target).get('discordId')||'').trim();try{await api('/api/admin/panel-admins',{method:'POST',body:JSON.stringify({discordId})});toast('تمت إضافة الأدمن');renderAdmin()}catch(err){toast(err.message==='ADMIN_EXISTS'?'الأدمن مضاف بالفعل':'تعذر إضافة الأدمن')}}
-window.removePanelAdmin=async id=>{if(!confirm('حذف صلاحية الأدمن من لوحة التحكم؟'))return;await api(`/api/admin/panel-admins/${id}`,{method:'DELETE'});toast('تم حذف الأدمن');renderAdmin()};
+async function addPanelAdmin(e){
+  e.preventDefault();
+  const f=new FormData(e.target);
+  const discordId=String(f.get('discordId')||'').trim();
+  const role=String(f.get('role')||'admin')==='manager'?'manager':'admin';
+  try{
+    const r=await api('/api/admin/panel-admins',{method:'POST',body:JSON.stringify({discordId,role})});
+    const a=r.admin||{};
+    toast(`تمت إضافة ${role==='manager'?'المانجر':'الأدمن'}: ${a.globalName||a.username||discordId}`);
+    await renderAdmin();
+  }catch(err){
+    const map={ADMIN_EXISTS:'الشخص مضاف بالفعل',ALREADY_OWNER:'ده حساب الـ Owner',INVALID_DISCORD_ID:'Discord ID غير صحيح',OWNER_ONLY:'الـ Owner فقط يقدر يضيف إدارة'};
+    toast(map[err.message]||'تعذر إضافة الحساب');
+  }
+}
+window.removePanelAdmin=async id=>{if(!confirm('حذف صلاحية هذا الإداري من لوحة التحكم؟'))return;await api(`/api/admin/panel-admins/${id}`,{method:'DELETE'});toast('تم حذف الإداري');renderAdmin()};
+
+window.exportTurboBackup=async()=>{
+  try{
+    const r=await fetch(`${API}/api/admin/backup/export`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||`HTTP_${r.status}`);
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;
+    a.download=`turbo-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+    toast('تم تنزيل النسخة الاحتياطية');
+  }catch(e){toast(`تعذر تنزيل النسخة: ${e.message}`)}
+};
+window.importTurboBackup=async input=>{
+  const f=input?.files?.[0];if(!f)return;
+  if(!confirm('استرجاع النسخة سيستبدل البيانات الحالية بالكامل. متابعة؟')){input.value='';return}
+  try{
+    const text=await f.text();const data=JSON.parse(text);
+    await api('/api/admin/backup/import',{method:'POST',body:JSON.stringify(data)});
+    toast('تم استرجاع كل البيانات');await renderAdmin();
+  }catch(e){toast(`تعذر استرجاع النسخة: ${e.message}`)}finally{input.value=''}
+};
+
 window.toggleApps=async v=>{await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({applicationsOpen:v})});pub=await api('/api/public');renderPublic();renderAdmin();toast(v?'تم فتح التقديم':'تم قفل التقديم')};
 window.voicePass=async id=>{await api(`/api/admin/users/${id}/voice-pass`,{method:'POST',body:'{}'});toast('تم منح تصريح الدخول');renderAdmin()};
 window.resetUser=async id=>{await api(`/api/admin/users/${id}/reset`,{method:'POST',body:'{}'});toast('تم السماح بإعادة التقديم');renderAdmin()};
