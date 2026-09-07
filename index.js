@@ -186,6 +186,7 @@ function isPanelAdmin(user,db){return !!panelStaffEntry(user,db)}
 function isAdmin(user,db){return !!panelStaffRole(user,db)}
 async function admin(req,res,next){try{const db=await readDB();if(!isAdmin(req.user,db))return res.status(403).json({error:'ADMIN_ONLY'});req.db=db;next()}catch(e){next(e)}}
 async function owner(req,res,next){if(!isOwner(req.user))return res.status(403).json({error:'OWNER_ONLY'});next()}
+async function managerOrOwner(req,res,next){try{const db=req.db||await readDB();const role=panelStaffRole(req.user,db);if(role!=='owner'&&role!=='manager')return res.status(403).json({error:'MANAGER_ONLY'});req.db=db;req.staffRole=role;next()}catch(e){next(e)}}
 
 // ===================== AI STORY WARNING =====================
 function inspectStory(text=''){
@@ -682,9 +683,11 @@ app.patch('/api/admin/settings',auth,admin,asyncRoute(async(req,res)=>{
   res.json({ok:true});
 }));
 
-app.post('/api/admin/panel-admins',auth,owner,asyncRoute(async(req,res)=>{
+app.post('/api/admin/panel-admins',auth,managerOrOwner,asyncRoute(async(req,res)=>{
   const discordId=String(req.body?.discordId||'').trim();
-  const staffRole=req.body?.role==='manager'?'manager':'admin';
+  const requestedRole=req.body?.role==='manager'?'manager':'admin';
+  if(req.staffRole!=='owner' && requestedRole==='manager') return res.status(403).json({error:'OWNER_ONLY_FOR_MANAGER'});
+  const staffRole=req.staffRole==='owner'?requestedRole:'admin';
   if(!/^\d{16,22}$/.test(discordId))return res.status(400).json({error:'INVALID_DISCORD_ID'});
   if(discordId===String(IDS.OWNER_USER_ID))return res.status(400).json({error:'ALREADY_OWNER'});
   const profile=await fetchDiscordProfile(discordId);
@@ -698,8 +701,11 @@ app.post('/api/admin/panel-admins',auth,owner,asyncRoute(async(req,res)=>{
   });
   res.json({ok:true,admin:entry});
 }));
-app.delete('/api/admin/panel-admins/:discordId',auth,owner,asyncRoute(async(req,res)=>{
+app.delete('/api/admin/panel-admins/:discordId',auth,managerOrOwner,asyncRoute(async(req,res)=>{
   const discordId=String(req.params.discordId||'');
+  const current=(req.db?.panelAdmins||[]).find(a=>String(a.discordId)===discordId);
+  if(!current)return res.status(404).json({error:'STAFF_NOT_FOUND'});
+  if(req.staffRole!=='owner' && current.role==='manager')return res.status(403).json({error:'OWNER_ONLY_FOR_MANAGER'});
   await mutate(db=>{
     db.panelAdmins=(db.panelAdmins||[]).filter(a=>String(a.discordId)!==discordId);
     db.audit.push({at:Date.now(),by:req.user.id,action:'panel_staff_remove',discordId});
