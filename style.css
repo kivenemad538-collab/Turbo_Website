@@ -139,3 +139,10 @@ button:disabled{opacity:.6;cursor:not-allowed;filter:saturate(.6)}
 
 /* V12.1 accepted/rejected full application archive */
 .application-filters{display:flex;gap:8px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid #152c42;background:#06101a}.application-filter-btn{border:1px solid #1b3a55;background:#081522;color:#7894aa;border-radius:10px;padding:8px 12px;cursor:pointer;font-family:inherit;font-weight:800;font-size:11px}.application-filter-btn:hover,.application-filter-btn.active{border-color:#168cff;background:#0d2940;color:#65bdff}.review-decision{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:18px 26px;border-bottom:1px solid #13283c;background:#081722}.review-decision>div{border:1px solid #173149;background:#050c13;border-radius:12px;padding:12px}.review-decision label{display:block;color:#4eb1ff;font-size:9px;font-weight:900;margin-bottom:5px}.review-decision b,.review-decision p{margin:0;color:#d2e0eb;white-space:pre-wrap;font-size:12px}.review-decision>div:nth-child(2){grid-column:auto}@media(max-width:620px){.review-decision{grid-template-columns:1fr;padding-left:15px;padding-right:15px}}
+
+/* V12.2 - applicant can review the full submitted application from status page */
+.applicant-submission{margin-top:8px;border:1px solid #17344d;background:#07111b;border-radius:18px;overflow:hidden}
+.applicant-submission .review-meta{padding:14px 18px}
+.applicant-submission .review-block{padding:20px 18px}
+.applicant-submission .review-answers{padding:0 18px 8px}
+.applicant-submission .review-answer:last-child{border-bottom:0}

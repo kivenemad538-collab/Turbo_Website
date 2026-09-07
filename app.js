@@ -203,6 +203,14 @@ function renderStatus(){
   if(a.status==='voice_rejected')x+=`<div class="notice bad"><b>تم رفض المقابلة الصوتية</b>${a.reason?`<br>السبب: ${esc(a.reason)}`:'<br>لم يتم تحديد سبب.'}</div>`;
   if(a.status==='voice_passed')x+='<div class="notice good">✅ تم قبولك في المقابلة ومنحك رول تصريح الدخول.</div>';
   if(a.status==='banned')x+=`<div class="notice bad"><b>⛔ حظر دائم من التقديم</b><br>${esc(a.reason||'تم حظر الحساب من التقديم.')}</div>`;
+
+  // Show the applicant a full copy of the submitted application in every status.
+  const submittedAnswers=(a.answers||[]).map((item,i)=>{
+    const q=(item&&typeof item==='object'&&item.q)?item.q:(pub.questions?.[i]||`السؤال ${i+1}`);
+    const ans=(item&&typeof item==='object')?(item.a??item.answer??''):item;
+    return `<div class="review-answer"><div class="review-q"><span>${String(i+1).padStart(2,'0')}</span><b>${esc(q)}</b></div><div class="review-a">${esc(ans||'—')}</div></div>`;
+  }).join('');
+  x+=`<div class="applicant-submission"><div class="review-meta"><span>بيانات التقديم</span><span>رقم التقديم #${a.number}</span>${a.age?`<span>العمر: ${esc(a.age)}</span>`:''}${a.createdAt?`<span>${new Date(a.createdAt).toLocaleString('ar-EG')}</span>`:''}</div>${a.story?`<div class="review-block"><label>قصة الشخصية</label><p>${esc(a.story)}</p></div>`:''}<div class="review-answers">${submittedAnswers||'<div class="notice">لا توجد إجابات محفوظة لهذا التقديم.</div>'}</div></div>`;
   box.innerHTML=x+'</div>';
 }
 window.bookSlot=async id=>{try{await api(`/api/interviews/${id}/book`,{method:'POST',body:'{}'});toast('تم حجز الموعد');me=await api('/api/me');pub=await api('/api/public');renderStatus()}catch{toast('الموعد غير متاح')}};
