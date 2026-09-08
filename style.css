@@ -197,3 +197,21 @@ body.portal-open{overflow:hidden}
 .reapply-panel{margin-top:24px;padding:20px;border:1px solid rgba(46,169,255,.28);border-radius:18px;background:linear-gradient(135deg,rgba(15,80,130,.22),rgba(7,16,27,.88));display:flex;align-items:center;justify-content:space-between;gap:18px}
 .reapply-panel p{margin:6px 0 0;color:var(--muted)}
 @media(max-width:700px){.reapply-panel{align-items:stretch;flex-direction:column}.reapply-panel .btn{width:100%}}
+
+
+/* V17.1 — application/status uses one slot in navigation and one section */
+#apply.showing-application-status .form-shell{
+  padding:0;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+}
+#apply.showing-application-status .section-head h2{
+  letter-spacing:0;
+}
+#apply.showing-application-status .section-head small{
+  color:var(--blue,#2ea8ff);
+}
+#apply.showing-application-status .unified-application-status{
+  margin-top:4px;
+}

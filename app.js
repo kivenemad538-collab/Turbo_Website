@@ -187,7 +187,20 @@ function renderPublic(){
   $('#creatorGrid').innerHTML=pub.creators.length?pub.creators.map(c=>`<a class="creator" href="${esc(c.url)}" target="_blank" rel="noopener"><img src="${esc(c.image||'')}" alt="${esc(c.name)}"><div class="meta"><h3>${esc(c.name)}</h3>${c.isLive?'<span class="live">● LIVE</span>':'<span class="offline">OFFLINE</span>'}</div></a>`).join(''):'<div class="notice">هيتم إضافة صناع المحتوى من لوحة التحكم.</div>';
   $('#applyState').textContent=pub.settings.applicationsOpen?'التقديم مفتوح الآن':'التقديم مغلق حاليًا';
 }
+function syncApplicationLabels(){
+  const hasApplication=!!(token&&me?.latest);
+  const nav=$('#applicationNavLink');
+  const title=$('#applicationSectionTitle');
+  const kicker=$('#applicationSectionKicker');
+  const subtitle=$('#applicationSectionSubtitle');
+  if(nav) nav.textContent=hasApplication?'حالة التقديم':'التقديم';
+  if(title) title.textContent=hasApplication?'حالة التقديم':'التقديم';
+  if(kicker) kicker.textContent=hasApplication?'APPLICATION STATUS':'APPLICATION';
+  if(subtitle) subtitle.textContent=hasApplication?'تابع قرار الإدارة وتفاصيل تقديمك من هنا.':'سجل بحساب Discord وابدأ.';
+}
+
 function renderMe(){
+  syncApplicationLabels();
   $('#loginBtn').innerHTML=`<span class="discord-dot">◈</span><span>${esc(me.user.globalName||me.user.username)} • خروج</span>`;
   $('#loginBtn').onclick=()=>{localStorage.removeItem('turbo_token');location.reload()};
   const adminBtn=$('#adminSecretBtn');
@@ -195,6 +208,7 @@ function renderMe(){
   renderApply();renderStatus();
 }
 function renderApply(){
+  syncApplicationLabels();
   const box=$('#applyBox');
   if(!token){
     box.innerHTML=`<div class="apply-launch-card"><div class="apply-launch-copy"><span>TURBO ENTRY</span><h3>ابدأ تقديم Turbo RP</h3><p>سجّل بحساب Discord الأول علشان التقديم يرتبط بحسابك.</p></div><button class="btn primary apply-launch-btn" type="button" onclick="oauthLogin()">تسجيل الدخول بـ Discord</button></div>`;
@@ -202,10 +216,12 @@ function renderApply(){
   }
   // صفحة واحدة فقط: لو فيه تقديم محفوظ نعرض حالته هنا بدل وجود صفحة حالة منفصلة.
   if(me?.latest){
+    $('#apply')?.classList.add('showing-application-status');
     const allowNew=!!me.canApply && !!pub?.settings?.applicationsOpen && me.latest.status!=='banned' && me.latest.status!=='voice_passed';
     box.innerHTML=buildStatusMarkup(me.latest,{showReapply:allowNew});
     return;
   }
+  $('#apply')?.classList.remove('showing-application-status');
   if(!pub.settings.applicationsOpen){
     box.innerHTML='<div class="notice">التقديم مغلق حاليًا من الإدارة.</div>';
     return;
