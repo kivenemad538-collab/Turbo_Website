@@ -264,7 +264,7 @@ function statusVisual(status){
   return `<div class="status-visual status-visual-${cfg[2]}"><div class="status-art"><svg viewBox="0 0 100 100" aria-hidden="true">${icon}</svg><i class="status-orbit one"></i><i class="status-orbit two"></i></div><div class="status-art-copy"><small>APPLICATION STATUS</small><h3>${cfg[0]}</h3><p>${cfg[1]}</p></div></div>`;
 }
 function buildStatusMarkup(a,{showReapply=false}={}){
-  let x=`<div class="status-card status-card-${esc(a.status)}"><div class="status-summary status-summary-${esc(a.status)}"><span class="tag">تقديم #${a.number}</span><h3>${statusText(a.status)}</h3><div class="status-applicant-name">الاسم: <b>${esc(a.realName)}</b></div></div>`;
+  let x=`<div class="status-card unified-application-status">${statusVisual(a.status)}<span class="tag">تقديم #${a.number}</span><h3>${statusText(a.status)}</h3><div>الاسم: <b>${esc(a.realName)}</b></div>`;
   if(a.status==='pending')x+='<div class="notice">طلبك وصل للإدارة وحاليًا قيد المراجعة.</div>';
   if(a.status==='rejected')x+=`<div class="notice bad"><b>سبب الرفض:</b><br>${esc(a.reason||'لم يتم تحديد سبب')}</div>`;
   if(a.status==='pre_accepted'){x+='<div class="notice good">تم قبولك مبدئيًا. المرحلة الثانية هي المقابلة الصوتية.</div>';if(me.booked)x+=`<div class="notice">موعدك المحجوز: <b>${new Date(me.booked.at).toLocaleString('ar-EG')}</b><br>${esc(me.booked.note||'')}</div>`;else x+=`<h3>اختار موعد المقابلة</h3><div class="list">${pub.interviewSlots.length?pub.interviewSlots.map(s=>`<div class="item"><span>${new Date(s.at).toLocaleString('ar-EG')}<br><small>${esc(s.note||'')}</small></span><button class="smallbtn" onclick="bookSlot('${s.id}')">حجز</button></div>`).join(''):'<div class="notice">لا توجد مواعيد متاحة حاليًا.</div>'}</div>`}

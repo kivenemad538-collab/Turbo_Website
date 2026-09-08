@@ -191,7 +191,9 @@ body.portal-open{overflow:hidden}
 .staff-add-form input,.staff-add-form select{height:48px;border:1px solid #1d496a;background:#050d15;color:#fff;border-radius:12px;padding:0 14px}
 @media(max-width:760px){.staff-add-form{grid-template-columns:1fr}.staff-add-form select,.staff-add-form button{width:100%}}
 
-/* V18 compatibility only: V16.1 visual style + V17 unified application behavior */
-#apply.showing-application-status .status-visual{display:none!important}
-#apply.showing-application-status .unified-application-status{margin:0}
+/* V19: keep V16.1 site style and restore the original animated status banner */
+#apply .unified-application-status{max-width:none;margin:0;border:0;background:transparent;box-shadow:none;padding:0}
+#apply .status-visual{margin-bottom:22px}
+#apply.showing-application-status .form-shell{padding:0;background:transparent;border:0;box-shadow:none}
+#apply.showing-application-status .unified-application-status{margin-top:4px}
 .reapply-panel{margin-top:18px}
