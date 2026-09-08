@@ -215,3 +215,18 @@ body.portal-open{overflow:hidden}
 #apply.showing-application-status .unified-application-status{
   margin-top:4px;
 }
+
+
+/* V17.2 — restore the original application-status layout exactly inside the unified slot */
+#apply.showing-application-status .form-shell{
+  padding:28px;
+  background:var(--panel,#07111a);
+  border:1px solid #163149;
+  border-radius:20px;
+  box-shadow:none;
+}
+#apply.showing-application-status .status-card{display:grid;gap:12px}
+#apply.showing-application-status .status-card>h3{margin:0;font-size:20px}
+#apply.showing-application-status .status-visual{display:none!important}
+#apply.showing-application-status .applicant-submission{margin-top:10px}
+@media(max-width:620px){#apply.showing-application-status .form-shell{padding:18px;border-radius:16px}}
