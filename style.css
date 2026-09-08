@@ -230,3 +230,62 @@ body.portal-open{overflow:hidden}
 #apply.showing-application-status .status-visual{display:none!important}
 #apply.showing-application-status .applicant-submission{margin-top:10px}
 @media(max-width:620px){#apply.showing-application-status .form-shell{padding:18px;border-radius:16px}}
+
+
+/* V17.3 — old status layout with a clear framed result box */
+#apply.showing-application-status .status-summary{
+  display:grid;
+  gap:10px;
+  padding:18px 20px;
+  border:1px solid #1c4d70;
+  border-radius:16px;
+  background:linear-gradient(135deg,rgba(13,38,58,.82),rgba(6,18,29,.96));
+  position:relative;
+  overflow:hidden;
+}
+#apply.showing-application-status .status-summary:before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,#39aaff,transparent);
+  opacity:.8;
+}
+#apply.showing-application-status .status-summary h3{
+  margin:0;
+  font-size:24px;
+  line-height:1.2;
+}
+#apply.showing-application-status .status-applicant-name{color:#a9bed0}
+#apply.showing-application-status .status-summary-pre_accepted,
+#apply.showing-application-status .status-summary-voice_passed{
+  border-color:#236648;
+  background:linear-gradient(135deg,rgba(10,53,38,.78),rgba(5,22,17,.96));
+  box-shadow:inset 0 0 28px rgba(64,220,151,.035);
+}
+#apply.showing-application-status .status-summary-pre_accepted:before,
+#apply.showing-application-status .status-summary-voice_passed:before{
+  background:linear-gradient(90deg,transparent,#43dfa0,transparent);
+}
+#apply.showing-application-status .status-summary-pre_accepted h3,
+#apply.showing-application-status .status-summary-voice_passed h3{color:#dfffee}
+#apply.showing-application-status .status-summary-rejected,
+#apply.showing-application-status .status-summary-voice_rejected,
+#apply.showing-application-status .status-summary-banned{
+  border-color:#6b313d;
+  background:linear-gradient(135deg,rgba(68,18,29,.76),rgba(27,8,13,.96));
+}
+#apply.showing-application-status .status-summary-rejected:before,
+#apply.showing-application-status .status-summary-voice_rejected:before,
+#apply.showing-application-status .status-summary-banned:before{
+  background:linear-gradient(90deg,transparent,#ff6478,transparent);
+}
+#apply.showing-application-status .status-summary-pending,
+#apply.showing-application-status .status-summary-voice_review{
+  border-color:#1f5f8c;
+  background:linear-gradient(135deg,rgba(9,48,76,.78),rgba(5,20,31,.96));
+}
+@media(max-width:620px){
+  #apply.showing-application-status .status-summary{padding:15px 16px;border-radius:14px}
+  #apply.showing-application-status .status-summary h3{font-size:21px}
+}
