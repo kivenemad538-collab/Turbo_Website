@@ -235,3 +235,13 @@ body.portal-open{overflow:hidden}
 #apply .status-visual-x .status-orbit:after,#apply .status-visual-ban .status-orbit:after{background:#ff6679;color:#ff6679}
 @keyframes turboStatusOrbit{to{transform:rotate(360deg)}}
 @media(max-width:700px){#apply .status-visual{grid-template-columns:110px 1fr;min-height:140px;padding:10px 14px}#apply .status-art{width:100px;height:100px}#apply .status-art-copy{min-width:0}#apply .status-art-copy h3{font-size:26px}}
+
+/* V20.1 - remove unused empty space in the application status layout */
+#apply.showing-application-status{padding-top:56px;padding-bottom:56px}
+#apply.showing-application-status .section-head{margin-bottom:18px}
+#apply.showing-application-status .form-shell{min-height:0}
+#apply.showing-application-status .unified-application-status{gap:8px}
+#apply.showing-application-status .status-visual{margin-bottom:8px}
+#apply.showing-application-status .status-card>.tag{margin-top:0}
+#apply.showing-application-status .applicant-submission{margin-top:4px}
+@media(max-width:620px){#apply.showing-application-status{padding-top:42px;padding-bottom:42px}}
