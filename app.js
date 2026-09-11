@@ -473,7 +473,7 @@ async function renderAdmin(){
         <div class="admin-card-kicker">DISCORD BOT SYNC</div>
         <h3>نظام البوت المتصل بالموقع</h3>
         <p>الموقع مربوط بنفس نظام Turbo Bot: نوع الشخصية، مراجعة التقديم، المقابلة الصوتية، الرولات، سجل النشاط، النسخ الاحتياطي، وStaff Panel.</p>
-        <div class="bot-feature-grid">
+        <button class="smallbtn" type="button" onclick="checkJobDiscordConfig()">فحص رومات Discord</button><div class="bot-feature-grid">
           <span>نوع الشخصية</span>
           <span>مراجعة Discord</span>
           <span>Voice Review</span>
@@ -540,6 +540,18 @@ window.importTurboBackup=async input=>{
   }catch(e){toast(`تعذر استرجاع النسخة: ${e.message}`)}finally{input.value=''}
 };
 
+
+
+window.checkJobDiscordConfig=async()=>{
+  try{
+    const h=await api('/api/admin/job-config-health');
+    const names={ems:'الإسعاف',police:'الشرطة',mechanic:'الميكانيكي'};
+    const lines=Object.entries(h.jobs||{}).map(([k,v])=>`${names[k]||k}: مراجعة ${v.review?'✅':'❌'} | كاتجوري ${v.ticketCategory?'✅':'❌'}${(v.errors||[]).length?` | ${(v.errors||[]).join(', ')}`:''}`);
+    alert(`Discord Jobs Check\nالسيرفر: ${h.guild?'✅':'❌'}\nرول الإدارة: ${h.managerRole?'✅':'❌'}\n\n${lines.join('\n')}`);
+  }catch(e){
+    alert(`تعذر فحص إعدادات Discord: ${e.message||e}`);
+  }
+};
 
 async function saveBrandingSettings(e){
   e.preventDefault();
@@ -869,7 +881,21 @@ async function submitJobApplication(e){
     LOGIN_REQUIRED:'سجّل دخول Discord الأول.',REAL_NAME_TWO_PARTS:'اكتب الاسم الأول والأخير.',INVALID_AGE:'العمر لازم يكون بين 16 و80.',
     INVALID_JOB_TYPE:'نوع الوظيفة غير صحيح.',JOB_ALREADY_ACTIVE:'عندك تقديم قائم لنفس الوظيفة بالفعل.',JOB_ALREADY_PENDING:'عندك تقديم لنفس الوظيفة قيد المراجعة.',
     WORKSHOP_REQUIRED:'اختار ورشة متاحة.',JOB_ANSWERS_SHORT:'الخبرة وسبب الانضمام لازم يكونوا 20 حرف على الأقل.',JOB_AVAILABILITY_SHORT:'اكتب أوقات تواجدك بشكل أوضح.',
-    JOB_DISCORD_UNAVAILABLE:'البوت غير متصل حاليًا. جرّب بعد دقيقة.',JOB_REVIEW_CHANNEL_INVALID:'روم مراجعة التقديم غير مضبوط في البوت.',JOB_REVIEW_SEND_FAILED:'التقديم لم يصل لروم المراجعة، لذلك لم يتم حفظه. جرّب مرة أخرى.',
+    JOB_DISCORD_UNAVAILABLE:'البوت غير متصل حاليًا. جرّب بعد دقيقة.',
+    JOB_GUILD_NOT_FOUND:'البوت مش موجود داخل سيرفر الشغلانات 1535337681842606230 أو مش قادر يوصل له.',
+    JOB_BOT_MEMBER_UNAVAILABLE:'البوت موجود لكن تعذر قراءة عضويته داخل سيرفر الشغلانات.',
+    JOB_REVIEW_CHANNEL_MISSING:'ID روم المراجعة غير موجود في إعدادات البوت.',
+    JOB_REVIEW_CHANNEL_NOT_FOUND:'البوت مش لاقي روم المراجعة. تأكد من الـID وإن البوت عنده View Channel.',
+    JOB_REVIEW_WRONG_GUILD:'روم المراجعة موجود في سيرفر مختلف عن سيرفر الشغلانات.',
+    JOB_REVIEW_NOT_TEXT:'المكان المحدد للمراجعة مش Text Channel صالح لإرسال التقديمات.',
+    JOB_REVIEW_NO_VIEW:'البوت ممنوع من رؤية روم المراجعة. فعّل View Channel للبوت.',
+    JOB_REVIEW_NO_SEND:'البوت ممنوع من إرسال رسائل في روم المراجعة. فعّل Send Messages.',
+    JOB_REVIEW_NO_EMBEDS:'البوت محتاج صلاحية Embed Links في روم المراجعة.',
+    JOB_TICKET_CATEGORY_NOT_FOUND:'كاتجوري التذاكر غير موجودة أو البوت مش قادر يشوفها.',
+    JOB_TICKET_TARGET_NOT_CATEGORY:'ID التذاكر المحدد مش Category.',
+    JOB_TICKET_NO_VIEW:'البوت مش قادر يشوف كاتجوري التذاكر.',
+    JOB_REVIEW_CHANNEL_INVALID:'إعداد روم المراجعة غير صحيح.',
+    JOB_REVIEW_SEND_FAILED:'Discord رفض إرسال التقديم بعد الفحص. راجع صلاحيات البوت.',
     CORS_NOT_ALLOWED:'رابط الموقع غير مسموح به في إعدادات البوت.'
   };
   form.dataset.sending='1';
