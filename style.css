@@ -3235,3 +3235,41 @@ main{
 
 /* V32 news */
 .news-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}.news-card{border:1px solid rgba(71,177,235,.22);background:linear-gradient(145deg,rgba(6,18,28,.86),rgba(3,10,16,.94));border-radius:18px;padding:22px;min-height:180px}.news-card small{color:#55bfff;letter-spacing:.18em;font-weight:800}.news-card h3{font-size:1.25rem;margin:10px 0;color:#f5f9fc}.news-card p{color:#aab8c5;line-height:1.9;white-space:pre-wrap}.news-card time{display:block;margin-top:16px;color:#5f7485;font-size:.78rem}.admin-news-list{display:grid;gap:8px;margin-top:14px}.admin-news-item{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid rgba(71,177,235,.16);padding:12px;border-radius:12px}.admin-news-item div{display:grid;gap:4px}.admin-news-item small{color:#8093a4;max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.danger.mini{padding:7px 11px;font-size:.78rem}
+
+
+/* V33 — per-job application controls */
+.job-access-admin .form-grid{
+  margin-top:14px;
+}
+.job-access-status{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:14px;
+}
+.job-access-status span{
+  min-width:0;
+  padding:10px 12px;
+  border:1px solid rgba(100,160,188,.13);
+  border-radius:9px;
+  background:rgba(4,10,14,.52);
+  color:#81939e;
+  font-size:10px;
+}
+.job-access-status b{
+  color:#dceaf1;
+}
+.job-access-status small{
+  display:block;
+  margin-top:3px;
+  color:#6faec9;
+}
+.job-card button[disabled],
+.jobs-grid button[disabled]{
+  opacity:.48;
+  cursor:not-allowed;
+  filter:saturate(.35);
+}
+@media(max-width:700px){
+  .job-access-status{grid-template-columns:1fr}
+}

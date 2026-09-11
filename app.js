@@ -432,7 +432,42 @@ async function renderAdmin(){
     <div class="admin-summary"><div class="admin-stat"><b>${st.applications.length}</b><span>كل التقديمات</span></div><div class="admin-stat"><b>${st.applications.filter(a=>a.status==='pending').length}</b><span>قيد المراجعة</span></div><div class="admin-stat"><b>${st.applications.filter(a=>['pre_accepted','voice_review'].includes(a.status)).length}</b><span>المرحلة الثانية</span></div><div class="admin-stat"><b>${st.applications.filter(a=>a.status==='voice_passed').length}</b><span>مقبولين نهائيًا</span></div></div>
     <div class="admin-control-grid">
       <div class="card admin-settings-card"><h3>حالة التقديم</h3><p>الحالة الحالية: <b>${st.settings.applicationsOpen?'مفتوح':'مغلق'}</b></p><button class="${st.settings.applicationsOpen?'danger':'btn primary'}" onclick="toggleApps(${!st.settings.applicationsOpen})">${st.settings.applicationsOpen?'قفل التقديم':'فتح التقديم'}</button></div>
-      <div class="card admin-settings-card"><h3>تقديمات الوظائف</h3><p>الحالة الحالية: <b>${st.settings.jobApplicationsOpen!==false?'مفتوحة':'مغلقة'}</b></p><button class="${st.settings.jobApplicationsOpen!==false?'danger':'btn primary'}" onclick="toggleJobApps(${st.settings.jobApplicationsOpen===false})">${st.settings.jobApplicationsOpen!==false?'قفل تقديمات الوظائف':'فتح تقديمات الوظائف'}</button></div>
+      <div class="card admin-settings-card job-access-admin">
+        <div class="admin-card-kicker">JOB APPLICATION CONTROL</div>
+        <h3>فتح وقفل تقديمات الوظائف</h3>
+        <p>اختار الوظيفة اللي عايز تفتحها أو تقفلها. الميكانيكي تقدر تفتحه لكل الورش أو لورشة واحدة بس.</p>
+        <form id="jobAccessForm" class="form-grid">
+          <div class="field">
+            <label>الوظيفة</label>
+            <select name="jobType" id="jobAccessType" required>
+              <option value="ems">الإسعاف</option>
+              <option value="police">الشرطة</option>
+              <option value="mechanic">الميكانيكي</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>الحالة</label>
+            <select name="open" required>
+              <option value="true">مفتوح</option>
+              <option value="false">مغلق</option>
+            </select>
+          </div>
+          <div class="field full hidden" id="mechanicAccessBox">
+            <label>الميكانيكي متاح لمين؟</label>
+            <select name="mechanicScope" id="mechanicScopeSelect">
+              <option value="all">كل الورش</option>
+              ${(st.mechanicWorkshops||[]).sort((a,b)=>(a.order||0)-(b.order||0)).map(w=>`<option value="${esc(w.id)}">${esc(w.name)}</option>`).join('')}
+            </select>
+          </div>
+          <button class="btn primary" type="submit">حفظ حالة التقديم</button>
+        </form>
+        <div class="job-access-status">
+          <span>الإسعاف: <b>${st.settings.jobApplicationAccess?.ems?.open!==false?'مفتوح':'مغلق'}</b></span>
+          <span>الشرطة: <b>${st.settings.jobApplicationAccess?.police?.open!==false?'مفتوح':'مغلق'}</b></span>
+          <span>الميكانيكي: <b>${st.settings.jobApplicationAccess?.mechanic?.open!==false?'مفتوح':'مغلق'}</b>
+          ${st.settings.jobApplicationAccess?.mechanic?.open!==false?`<small>${st.settings.jobApplicationAccess?.mechanic?.mode==='one'?'ورشة واحدة':'كل الورش'}</small>`:''}</span>
+        </div>
+      </div>
       <div class="card admin-content-settings"><h3>إضافة خبر</h3><p>اكتب الخبر وهينزل مباشرة في قسم الأخبار بالموقع.</p><form id="newsForm"><div class="field"><label>عنوان الخبر</label><input name="title" maxlength="120" required></div><div class="field"><label>محتوى الخبر</label><textarea name="body" maxlength="2000" required></textarea></div><button class="smallbtn" type="submit">نشر الخبر</button></form><div class="admin-news-list">${(st.settings.news||[]).slice().reverse().map(n=>`<div class="admin-news-item"><div><b>${esc(n.title)}</b><small>${esc(n.body)}</small></div><button class="danger mini" onclick="deleteNews('${esc(n.id)}')">حذف</button></div>`).join('')||'<div class="notice">لا توجد أخبار بعد.</div>'}</div></div>
 
       <div class="card admin-content-settings">
@@ -504,6 +539,12 @@ async function renderAdmin(){
   </div>`;
   filterApplications();
   $('#creatorForm').onsubmit=addCreator;$('#slotForm').onsubmit=addSlot;if($('#siteSettingsForm'))$('#siteSettingsForm').onsubmit=saveSiteSettings;if($('#brandingForm'))$('#brandingForm').onsubmit=saveBrandingSettings;if($('#publicTeamForm'))$('#publicTeamForm').onsubmit=addPublicTeamMember;if($('#workshopForm'))$('#workshopForm').onsubmit=addWorkshop;if($('#newsForm'))$('#newsForm').onsubmit=addNews;
+  if($('#jobAccessForm')){
+    $('#jobAccessForm').onsubmit=saveJobAccess;
+    const typeSel=$('#jobAccessType'),box=$('#mechanicAccessBox');
+    const sync=()=>box?.classList.toggle('hidden',typeSel?.value!=='mechanic');
+    typeSel?.addEventListener('change',sync);sync();
+  }
   if(st.viewer?.isManager && $('#panelAdminForm'))$('#panelAdminForm').onsubmit=addPanelAdmin;
 }
 async function addPanelAdmin(e){
@@ -605,7 +646,44 @@ async function addWorkshop(e){e.preventDefault();const f=Object.fromEntries(new 
 window.deleteWorkshop=async id=>{if(!confirm('حذف الورشة؟'))return;await api(`/api/admin/mechanic-workshops/${encodeURIComponent(id)}`,{method:'DELETE'});toast('تم حذف الورشة');await renderAdmin();pub=await api('/api/public');renderPublic()};
 
 async function saveSiteSettings(e){e.preventDefault();const f=new FormData(e.target);const aboutText=String(f.get('aboutText')||'').trim();const rules=String(f.get('rules')||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);try{await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({aboutText,rules})});pub=await api('/api/public');renderPublic();toast('تم حفظ محتوى الموقع');await renderAdmin()}catch(err){toast('تعذر حفظ المحتوى')}}
-window.toggleJobApps=async v=>{await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({jobApplicationsOpen:v})});pub=await api('/api/public');renderPublic();renderAdmin();toast(v?'تم فتح تقديمات الوظائف':'تم قفل تقديمات الوظائف')};
+async function saveJobAccess(e){
+  e.preventDefault();
+  const f=new FormData(e.target);
+  const type=String(f.get('jobType')||'');
+  const open=String(f.get('open'))==='true';
+
+  const current=JSON.parse(JSON.stringify(st.settings.jobApplicationAccess||{
+    ems:{open:true},
+    police:{open:true},
+    mechanic:{open:true,mode:'all',workshopId:''}
+  }));
+
+  if(type==='ems'||type==='police'){
+    current[type]={open};
+  }else if(type==='mechanic'){
+    const scope=String(f.get('mechanicScope')||'all');
+    current.mechanic={
+      open,
+      mode:scope==='all'?'all':'one',
+      workshopId:scope==='all'?'':scope
+    };
+  }else{
+    toast('اختار وظيفة صحيحة');
+    return;
+  }
+
+  await api('/api/admin/settings',{
+    method:'PATCH',
+    body:JSON.stringify({jobApplicationAccess:current})
+  });
+
+  pub=await api('/api/public');
+  renderPublic();
+  await renderAdmin();
+
+  const labels={ems:'الإسعاف',police:'الشرطة',mechanic:'الميكانيكي'};
+  toast(`${labels[type]}: ${open?'تم فتح التقديم':'تم قفل التقديم'}`);
+}
 async function addNews(e){e.preventDefault();const f=new FormData(e.target);const item={id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),title:String(f.get('title')||'').trim(),body:String(f.get('body')||'').trim(),createdAt:Date.now()};const news=[...(st.settings.news||[]),item];await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({news})});pub=await api('/api/public');renderPublic();await renderAdmin();toast('تم نشر الخبر')}
 window.deleteNews=async id=>{const news=(st.settings.news||[]).filter(n=>n.id!==id);await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({news})});pub=await api('/api/public');renderPublic();await renderAdmin();toast('تم حذف الخبر')};
 window.toggleApps=async v=>{await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({applicationsOpen:v})});pub=await api('/api/public');renderPublic();renderAdmin();toast(v?'تم فتح التقديم':'تم قفل التقديم')};
@@ -861,16 +939,21 @@ init();
 const JOB_META={ems:{name:'تقديم مسعف',icon:'✚',desc:'انضم للإسعاف وتعامل مع الحالات الطبية والبلاغات باحتراف.'},police:{name:'تقديم شرطة',icon:'◈',desc:'انضم للشرطة واحمِ المدينة واشتغل على البلاغات والتحقيقات.'},mechanic:{name:'تقديم ميكانيكي',icon:'⚙',desc:'اختار الورشة اللي تناسبك وابدأ مشوارك كميكانيكي.'}};
 function renderJobs(){
   const grid=$('#jobsGrid');if(!grid)return;
-  grid.innerHTML=Object.entries(JOB_META).map(([id,j])=>`<article class="job-card job-${id}"><div class="job-icon">${j.icon}</div><small>TURBO DEPARTMENT</small><h3>${j.name}</h3><p>${j.desc}</p><button class="btn primary" type="button" onclick="openJobPortal('${id}')">فتح التقديم</button></article>`).join('');
+  grid.innerHTML=Object.entries(JOB_META).map(([id,j])=>`<article class="job-card job-${id}"><div class="job-icon">${j.icon}</div><small>TURBO DEPARTMENT</small><h3>${j.name}</h3><p>${j.desc}</p>${(()=>{const a=pub?.settings?.jobApplicationAccess?.[id];const open=a?.open!==false;return `<button class="btn ${open?'primary':'ghost'}" type="button" ${open?`onclick="openJobPortal('${id}')"`:'disabled'}>${open?'فتح التقديم':'التقديم مغلق'}</button>`})()}</article>`).join('');
   const mine=$('#myJobApplications');if(!mine)return;const apps=me?.jobApplications||[];mine.innerHTML=apps.length?`<div class="job-history-title">تقديماتك الأخيرة</div><div class="job-history-grid">${apps.slice(0,6).map(x=>`<div class="job-history-item"><b>${JOB_META[x.type]?.name||x.type}</b><span class="job-state job-state-${x.status}">${x.status==='pending'?'قيد المراجعة':x.status==='accepting'?'جاري فتح التذكرة':x.status==='accepted'?'مقبول':x.status==='rejected'?'مرفوض':x.status}</span>${x.workshopName?`<small>${esc(x.workshopName)}</small>`:''}</div>`).join('')}</div>`:'';
 }
 window.openJobPortal=function(type){
   if(!token){toast('سجّل دخول Discord الأول');location.href=$('#loginBtn').href;return}
   const j=JOB_META[type];if(!j)return;
   if(pub?.settings?.jobApplicationsOpen===false){toast('تقديمات الوظائف مغلقة حاليًا');return}
+  const access=pub?.settings?.jobApplicationAccess?.[type]||{open:true};
+  if(access.open===false){toast('التقديم للوظيفة دي مغلق حاليًا');return}
   const active=(me?.jobApplications||[]).find(x=>x.type===type&&['pending','accepting','accepted'].includes(x.status));
   if(active){toast(active.status==='accepted'?'أنت مقبول بالفعل في التقديم ده':'عندك تقديم لنفس الوظيفة قيد المراجعة');return}
-  const shops=(pub?.mechanicWorkshops||[]);
+  let shops=(pub?.mechanicWorkshops||[]);
+  if(type==='mechanic'&&access.mode==='one'){
+    shops=shops.filter(w=>String(w.id)===String(access.workshopId||''));
+  }
   if(type==='mechanic'&&!shops.length){toast('لا توجد ورش متاحة للتقديم حاليًا');return}
   const shopSelect=type==='mechanic'?`<div class="field full"><label>اختار الورشة</label><select name="workshopId" required><option value="">اختر الورشة</option>${shops.map(w=>`<option value="${esc(w.id)}">${esc(w.name)}</option>`).join('')}</select></div>`:'';
   $('#jobPortalBody').innerHTML=`<div class="portal-intro"><span>JOB APPLICATION</span><h2>${j.name}</h2><p>${j.desc}</p></div><form id="jobApplyForm" class="vision-form portal-form"><input type="hidden" name="type" value="${type}"><div class="form-grid"><div class="field"><label>الاسم الحقيقي</label><input name="realName" autocomplete="name" required></div><div class="field"><label>العمر</label><input name="age" type="number" min="16" max="80" required></div>${shopSelect}<div class="field full"><label>خبرتك في الوظيفة</label><textarea name="experience" minlength="20" maxlength="1000" required></textarea><small class="field-hint">20 حرف على الأقل</small></div><div class="field full"><label>ليه عايز تنضم للقسم؟</label><textarea name="why" minlength="20" maxlength="1000" required></textarea><small class="field-hint">20 حرف على الأقل</small></div><div class="field full"><label>أوقات تواجدك</label><textarea name="availability" minlength="5" maxlength="500" required></textarea></div></div><div id="jobFormError" class="notice bad hidden"></div><button id="jobSubmitBtn" class="btn primary wide" type="submit">إرسال التقديم</button></form>`;
@@ -905,7 +988,9 @@ async function submitJobApplication(e){
     JOB_REVIEW_CHANNEL_INVALID:'إعداد روم المراجعة غير صحيح.',
     JOB_REVIEW_SEND_FAILED:'Discord رفض إرسال التقديم بعد الفحص. راجع صلاحيات البوت.',
     CORS_NOT_ALLOWED:'رابط الموقع غير مسموح به في إعدادات البوت.',
-    JOB_APPLICATIONS_CLOSED:'تقديمات الوظائف مغلقة حاليًا.'
+    JOB_APPLICATIONS_CLOSED:'تقديمات الوظائف مغلقة حاليًا.',
+    JOB_DEPARTMENT_CLOSED:'التقديم للوظيفة دي مغلق حاليًا.',
+    WORKSHOP_CLOSED:'التقديم للميكانيكي مش مفتوح للورشة دي حاليًا.'
   };
   form.dataset.sending='1';
   if(btn){btn.disabled=true;btn.textContent='جاري إرسال التقديم...'}

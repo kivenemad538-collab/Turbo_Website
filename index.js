@@ -14,7 +14,7 @@ import {
   ModalBuilder, TextInputBuilder, TextInputStyle, Events, PermissionFlagsBits, ChannelType
 } from 'discord.js';
 
-const BUILD_VERSION = 'V29-JOB-APPLICATIONS-TICKETS';
+const BUILD_VERSION = 'V33-PER-JOB-OPEN-CLOSE';
 
 // ===================== DISCORD IDs ===========================
 const IDS = {
@@ -69,6 +69,11 @@ const seed = {
   settings:{
     applicationsOpen:true,
     jobApplicationsOpen:true,
+    jobApplicationAccess:{
+      ems:{open:true},
+      police:{open:true},
+      mechanic:{open:true,mode:'all',workshopId:''}
+    },
     aboutText:'Turbo RP هو سيرفر رول بلاي عربي بنركز فيه على السيناريوهات والتفاعل وجودة التجربة.',
     rules:[],
     news:[],
@@ -192,7 +197,6 @@ function ensureNewWebsiteFields(db){
   if(typeof db.settings.logoImage!=='string') db.settings.logoImage='';
   if(typeof db.settings.cityBackground!=='string') db.settings.cityBackground='';
   if(!Array.isArray(db.teamMembers)) db.teamMembers=[];
-  return db;
   if(!db.counters || typeof db.counters!=='object') db.counters={application:0,jobApplication:0};
   if(typeof db.counters.jobApplication!=='number') db.counters.jobApplication=0;
   if(!Array.isArray(db.jobApplications)) db.jobApplications=[];
@@ -640,6 +644,7 @@ app.get('/api/public',asyncRoute(async(req,res)=>{
     settings:{
       applicationsOpen:db.settings.applicationsOpen,
       jobApplicationsOpen:db.settings.jobApplicationsOpen!==false,
+      jobApplicationAccess:db.settings.jobApplicationAccess,
       aboutText:db.settings.aboutText,
       rules:db.settings.rules,
       news:db.settings.news||[],
@@ -834,10 +839,32 @@ app.get('/api/admin/storage-status',auth,owner,asyncRoute(async(req,res)=>{
 }));
 
 app.patch('/api/admin/settings',auth,admin,asyncRoute(async(req,res)=>{
-  const {applicationsOpen,jobApplicationsOpen,aboutText,rules,news,logoImage,cityBackground}=req.body;
+  const {applicationsOpen,jobApplicationsOpen,jobApplicationAccess,aboutText,rules,news,logoImage,cityBackground}=req.body;
   await mutate(db=>{
     if(typeof applicationsOpen==='boolean')db.settings.applicationsOpen=applicationsOpen;
     if(typeof jobApplicationsOpen==='boolean')db.settings.jobApplicationsOpen=jobApplicationsOpen;
+    if(jobApplicationAccess&&typeof jobApplicationAccess==='object'){
+      const current=db.settings.jobApplicationAccess||{
+        ems:{open:true},
+        police:{open:true},
+        mechanic:{open:true,mode:'all',workshopId:''}
+      };
+      if(jobApplicationAccess.ems&&typeof jobApplicationAccess.ems.open==='boolean'){
+        current.ems={open:jobApplicationAccess.ems.open};
+      }
+      if(jobApplicationAccess.police&&typeof jobApplicationAccess.police.open==='boolean'){
+        current.police={open:jobApplicationAccess.police.open};
+      }
+      if(jobApplicationAccess.mechanic&&typeof jobApplicationAccess.mechanic==='object'){
+        const m=jobApplicationAccess.mechanic;
+        current.mechanic={
+          open:typeof m.open==='boolean'?m.open:(current.mechanic?.open!==false),
+          mode:['all','one'].includes(m.mode)?m.mode:(current.mechanic?.mode||'all'),
+          workshopId:typeof m.workshopId==='string'?m.workshopId:(current.mechanic?.workshopId||'')
+        };
+      }
+      db.settings.jobApplicationAccess=current;
+    }
     if(typeof aboutText==='string')db.settings.aboutText=aboutText.slice(0,5000);
     if(Array.isArray(rules))db.settings.rules=rules.map(x=>String(x).slice(0,1000));
     if(Array.isArray(news))db.settings.news=news.slice(0,20).map(x=>({id:String(x.id||crypto.randomUUID()),title:String(x.title||'').slice(0,120),body:String(x.body||'').slice(0,2000),createdAt:Number(x.createdAt||Date.now())})).filter(x=>x.title&&x.body);
@@ -991,6 +1018,11 @@ app.post('/api/job-applications',auth,asyncRoute(async(req,res)=>{
     if(active)throw new Error('JOB_ALREADY_PENDING');
     let workshopName='';
     if(jobType==='mechanic'){
+      const mechanicAccess=db.settings.jobApplicationAccess?.mechanic||{open:true,mode:'all',workshopId:''};
+      if(mechanicAccess.open===false)throw new Error('JOB_DEPARTMENT_CLOSED');
+      if(mechanicAccess.mode==='one' && String(workshopId||'')!==String(mechanicAccess.workshopId||'')){
+        throw new Error('WORKSHOP_CLOSED');
+      }
       const w=db.mechanicWorkshops.find(x=>x.id===String(workshopId||'')&&x.active!==false);
       if(!w)throw new Error('WORKSHOP_REQUIRED');
       workshopName=w.name;
