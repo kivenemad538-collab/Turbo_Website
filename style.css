@@ -3218,3 +3218,11 @@ main{
     min-height:44px!important;
   }
 }
+
+/* V29 rules logo + job applications */
+.gate-zone .rules-gateway-orbit.gate-logo{border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;animation:none!important}
+.gate-zone .rules-gateway-orbit.gate-logo:before,.gate-zone .rules-gateway-orbit.gate-logo:after{display:none!important}
+.gate-zone .gate-logo img{width:58px!important;height:58px!important;border-radius:50%!important;object-fit:cover!important;border:1px solid rgba(104,177,209,.28)!important;box-shadow:0 0 22px rgba(65,159,202,.14)!important;animation:none!important}
+.gate-zone .rules-gateway-orbit i{display:none!important;animation:none!important}
+.jobs-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.job-card{padding:22px;border:1px solid rgba(93,154,182,.16);border-radius:14px;background:rgba(6,13,18,.91);min-height:220px;display:flex;flex-direction:column;align-items:flex-start}.job-card small{color:#6d9db4;font-size:8px;letter-spacing:1.8px}.job-card h3{margin:8px 0 7px;font-size:20px}.job-card p{color:#71828c;font-size:11px;line-height:1.9;flex:1}.job-icon{width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(103,176,208,.18);border-radius:11px;color:#78bad8;background:rgba(17,43,56,.4);margin-bottom:14px;font-size:18px}.my-job-applications{margin-top:16px}.job-history-title{font-weight:800;margin-bottom:8px;color:#aabac3}.job-history-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.job-history-item{padding:12px;border:1px solid rgba(95,150,177,.12);border-radius:10px;background:rgba(5,11,15,.74);display:flex;gap:8px;align-items:center}.job-history-item b{font-size:11px}.job-history-item small{color:#78909c}.job-state{margin-inline-start:auto;font-size:8px;padding:4px 7px;border-radius:999px;background:#182630;color:#91a8b5}.job-state-accepted{background:#143124;color:#7ee6ad}.job-state-rejected{background:#32191b;color:#e8999f}.job-portal-shell{max-width:820px!important}.admin-workshop-list{display:grid;gap:7px;margin-top:14px}.admin-workshops-card{grid-column:1/-1!important}
+@media(max-width:820px){.jobs-grid,.job-history-grid{grid-template-columns:1fr}.gate-zone .gate-logo img{width:52px!important;height:52px!important}}
