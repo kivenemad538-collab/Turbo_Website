@@ -148,7 +148,8 @@ async function init(){
   consumeToken();
   $('#menu').onclick=()=>$('#nav').classList.toggle('open');
   document.querySelectorAll('#nav a').forEach(a=>a.onclick=(e)=>{ $('#nav').classList.remove('open'); if(a.getAttribute('href')==='#apply'){e.preventDefault();openApplicationPortal();} });
-  $('#closeApplicationPortal').onclick=closeApplicationPortal;$('#closeJobPortal').onclick=closeJobPortal;
+  if($('#closeApplicationPortal'))$('#closeApplicationPortal').onclick=closeApplicationPortal;
+  if($('#closeJobPortal'))$('#closeJobPortal').onclick=closeJobPortal;
   $('#loginBtn').href=`${API || 'https://botsturbo-production.up.railway.app'}/auth/discord`; $('#loginBtn').onclick=oauthLogin;
   $('#adminSecretBtn').onclick=openAdminPanel;
   $('#adminSecretBtn').classList.add('hidden');
@@ -276,7 +277,13 @@ function openApplicationPortal(){
   $('#applicationPortalBody').innerHTML=`<div class="portal-intro"><span>STEP 01 / CHARACTER</span><h2>اختار بداية شخصيتك</h2><p>الاختيار ده بيساعد الإدارة تفهم اتجاه الشخصية. تقدر تطور قصتك بعد الدخول.</p></div><div class="character-grid">${roleCards()}</div>`;
 }
 window.closeApplicationPortal=closeApplicationPortal;
-function closeApplicationPortal(){const portal=$('#applicationPortal');portal.classList.add('hidden');portal.setAttribute('aria-hidden','true');document.body.classList.remove('portal-open')}
+function closeApplicationPortal(){
+  const portal=$('#applicationPortal');
+  if(!portal)return;
+  portal.classList.add('hidden');
+  portal.setAttribute('aria-hidden','true');
+  document.body.classList.remove('portal-open');
+}
 window.chooseCharacter=function(id){
   const c=CHARACTER_TYPES.find(x=>x.id===id);if(!c)return;selectedCharacterType=id;auditEvent('character_selected',{characterType:id});
   $('#applicationPortalBody').innerHTML=`<div class="portal-intro form-intro"><button class="portal-back" type="button" onclick="openApplicationPortal()">↩ تغيير الشخصية</button><span>STEP 02 / APPLICATION</span><h2>${c.name}</h2><p>كمّل بياناتك وإجاباتك. كل اللي هتكتبه هيتحفظ ويظهر للإدارة.</p></div><form id="applyForm" class="vision-form portal-form"><div class="selected-character-strip"><div class="mini-role ${'character-'+c.id}">${c.icon}</div><div><small>${c.sub}</small><b>${c.name}</b></div></div>
@@ -936,11 +943,40 @@ init();
   // Never leave the overlay hanging after tab restore/back-forward cache.
   window.addEventListener('pageshow',()=>setTimeout(hideTurboLoader,80));
 })();
-const JOB_META={ems:{name:'تقديم مسعف',icon:'✚',desc:'انضم للإسعاف وتعامل مع الحالات الطبية والبلاغات باحتراف.'},police:{name:'تقديم شرطة',icon:'◈',desc:'انضم للشرطة واحمِ المدينة واشتغل على البلاغات والتحقيقات.'},mechanic:{name:'تقديم ميكانيكي',icon:'⚙',desc:'اختار الورشة اللي تناسبك وابدأ مشوارك كميكانيكي.'}};
+const JOB_META={
+  police:{name:'تقديم الشرطة',code:'LSPD 01',eyebrow:'LOS SANTOS POLICE DEPARTMENT',desc:'لما تنتهي كل الخيارات، أنت الأمن الأخير.',icon:'◈'},
+  ems:{name:'تقديم المستشفى',code:'EMS 02',eyebrow:'EMERGENCY MEDICAL SERVICES',desc:'حياة تحتاج من ينقذها.',icon:'✚'},
+  mechanic:{name:'تقديم الميكانيكي',code:'MECH 03',eyebrow:'TURBO MECHANIC DEPARTMENT',desc:'اختار ورشتك وابدأ شغلك داخل المدينة.',icon:'⚙'},
+  gang:{name:'تقديم العصابات',code:'GANG 04',eyebrow:'TURBO GANGS',desc:'تقديم العصابات يتم من خلال Discord الرسمي.',icon:'◆',external:true,url:'https://discord.gg/dDPEuwzzQ'}
+};
 function renderJobs(){
   const grid=$('#jobsGrid');if(!grid)return;
-  grid.innerHTML=Object.entries(JOB_META).map(([id,j])=>`<article class="job-card job-${id}"><div class="job-icon">${j.icon}</div><small>TURBO DEPARTMENT</small><h3>${j.name}</h3><p>${j.desc}</p>${(()=>{const a=pub?.settings?.jobApplicationAccess?.[id];const open=a?.open!==false;return `<button class="btn ${open?'primary':'ghost'}" type="button" ${open?`onclick="openJobPortal('${id}')"`:'disabled'}>${open?'فتح التقديم':'التقديم مغلق'}</button>`})()}</article>`).join('');
-  const mine=$('#myJobApplications');if(!mine)return;const apps=me?.jobApplications||[];mine.innerHTML=apps.length?`<div class="job-history-title">تقديماتك الأخيرة</div><div class="job-history-grid">${apps.slice(0,6).map(x=>`<div class="job-history-item"><b>${JOB_META[x.type]?.name||x.type}</b><span class="job-state job-state-${x.status}">${x.status==='pending'?'قيد المراجعة':x.status==='accepting'?'جاري فتح التذكرة':x.status==='accepted'?'مقبول':x.status==='rejected'?'مرفوض':x.status}</span>${x.workshopName?`<small>${esc(x.workshopName)}</small>`:''}</div>`).join('')}</div>`:'';
+  const order=['police','ems','mechanic','gang'];
+  grid.innerHTML=order.map(id=>{
+    const j=JOB_META[id];
+    if(j.external){
+      return `<article class="job-gateway-card job-gang">
+        <div class="job-gateway-code">${j.code}</div>
+        <div class="job-gateway-main"><small>${j.eyebrow}</small><h3>${j.name}</h3><p>${j.desc}</p></div>
+        <div class="job-gateway-action"><span class="job-open-dot">مفتوح •</span><a class="job-gateway-link" href="${j.url}" target="_blank" rel="noopener">قدّم الآن ←</a></div>
+      </article>`;
+    }
+    const access=pub?.settings?.jobApplicationAccess?.[id]||{open:true};
+    const open=access.open!==false;
+    let sub='';
+    if(id==='mechanic'&&open){
+      sub=access.mode==='one'?'ورشة واحدة':'كل الورش';
+    }
+    return `<article class="job-gateway-card job-${id} ${open?'is-open':'is-closed'}">
+      <div class="job-gateway-code">${j.code}</div>
+      <div class="job-gateway-main"><small>${j.eyebrow}</small><h3>${j.name}</h3><p>${j.desc}</p>${sub?`<em>${sub}</em>`:''}</div>
+      <div class="job-gateway-action"><span class="${open?'job-open-dot':'job-closed-dot'}">${open?'مفتوح •':'مغلق •'}</span>${open?`<button class="job-gateway-link" type="button" onclick="openJobPortal('${id}')">قدّم الآن ←</button>`:'<span class="job-wait">انتظر فتح التقديم</span>'}</div>
+    </article>`;
+  }).join('');
+
+  const mine=$('#myJobApplications');if(!mine)return;
+  const apps=me?.jobApplications||[];
+  mine.innerHTML=apps.length?`<div class="job-history-title">تقديماتك الأخيرة</div><div class="job-history-grid">${apps.slice(0,6).map(x=>`<div class="job-history-item"><b>${JOB_META[x.type]?.name||x.type}</b><span class="job-state job-state-${x.status}">${x.status==='pending'?'قيد المراجعة':x.status==='accepting'?'جاري فتح التذكرة':x.status==='accepted'?'مقبول':x.status==='rejected'?'مرفوض':x.status}</span>${x.workshopName?`<small>${esc(x.workshopName)}</small>`:''}</div>`).join('')}</div>`:'';
 }
 window.openJobPortal=function(type){
   if(!token){toast('سجّل دخول Discord الأول');location.href=$('#loginBtn').href;return}
@@ -960,7 +996,35 @@ window.openJobPortal=function(type){
   $('#jobApplyForm').onsubmit=submitJobApplication;
   const p=$('#jobPortal');p.classList.remove('hidden');p.setAttribute('aria-hidden','false');document.body.classList.add('portal-open')
 };
-window.closeJobPortal=function(){const p=$('#jobPortal');p.classList.add('hidden');p.setAttribute('aria-hidden','true');document.body.classList.remove('portal-open')};
+function closeJobPortal(){
+  const p=$('#jobPortal');
+  if(!p)return;
+  p.classList.add('hidden');
+  p.setAttribute('aria-hidden','true');
+  document.body.classList.remove('portal-open');
+  const body=$('#jobPortalBody');if(body)body.innerHTML='';
+}
+window.closeJobPortal=closeJobPortal;
+
+// Portal close safety: works even if a direct button handler is lost after a re-render.
+document.addEventListener('click',e=>{
+  const closeBtn=e.target.closest?.('[data-close-portal]');
+  if(closeBtn){
+    e.preventDefault();e.stopPropagation();
+    closeBtn.dataset.closePortal==='job'?closeJobPortal():closeApplicationPortal();
+    return;
+  }
+  const jp=e.target.closest?.('#jobPortal');
+  if(jp && e.target===jp)closeJobPortal();
+  const ap=e.target.closest?.('#applicationPortal');
+  if(ap && e.target===ap)closeApplicationPortal();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(!$('#jobPortal')?.classList.contains('hidden')){e.preventDefault();closeJobPortal();return}
+  if(!$('#applicationPortal')?.classList.contains('hidden')){e.preventDefault();closeApplicationPortal()}
+});
+
 async function submitJobApplication(e){
   e.preventDefault();
   const form=e.target;

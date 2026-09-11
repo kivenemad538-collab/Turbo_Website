@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=33.0">
+  <link rel="stylesheet" href="style.css?v=34.0">
 </head>
 
 <body>
@@ -161,7 +161,7 @@
 
 
     <section id="jobs" class="section reveal-section jobs-section">
-      <div class="section-head"><span>03</span><div><small>CAREERS</small><h2>تقديمات الوظائف</h2></div><p>اختار القسم اللي عايز تنضم له.</p></div>
+      <div class="section-head jobs-head"><span>03</span><div><small>GATES — JOBS</small><h2>اختر بوابتك</h2></div><p>اختار الجهة اللي عايز تنضم لها وابدأ التقديم.</p></div>
       <div id="jobsGrid" class="jobs-grid"></div>
       <div id="myJobApplications" class="my-job-applications"></div>
     </section>
@@ -198,7 +198,7 @@
 
   <div id="jobPortal" class="application-portal hidden" aria-hidden="true">
     <div class="portal-noise"></div><div class="portal-shell job-portal-shell">
-      <div class="portal-topbar"><div class="portal-brand"><img src="turbo-logo.png?v=29" alt="Turbo" data-turbo-logo><div><b>TURBO JOBS</b><small>DEPARTMENT APPLICATION</small></div></div><button id="closeJobPortal" class="portal-close" type="button">✕</button></div>
+      <div class="portal-topbar"><div class="portal-brand"><img src="turbo-logo.png?v=29" alt="Turbo" data-turbo-logo><div><b>TURBO JOBS</b><small>DEPARTMENT APPLICATION</small></div></div><button id="closeJobPortal" class="portal-close" type="button" data-close-portal="job" onclick="closeJobPortal()" aria-label="إغلاق تقديم الوظيفة">✕</button></div>
       <div id="jobPortalBody" class="portal-body"></div>
     </div>
   </div>
@@ -208,7 +208,7 @@
     <div class="portal-shell">
       <div class="portal-topbar">
         <div class="portal-brand"><img src="turbo-logo.png?v=29" alt="Turbo" data-turbo-logo><div><b>TURBO APPLICATION</b><small>CHARACTER ENTRY SYSTEM</small></div></div>
-        <button id="closeApplicationPortal" class="portal-close" type="button">✕</button>
+        <button id="closeApplicationPortal" class="portal-close" type="button" data-close-portal="application" onclick="closeApplicationPortal()" aria-label="إغلاق التقديم">✕</button>
       </div>
       <div id="applicationPortalBody" class="portal-body"></div>
     </div>
@@ -229,6 +229,6 @@
     </div>
   </div>
 
-  <script src="config.js?v=5.1"></script><script src="app.js?v=33.0"></script>
+  <script src="config.js?v=5.1"></script><script src="app.js?v=34.0"></script>
 </body>
 </html>
