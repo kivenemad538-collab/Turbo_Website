@@ -216,6 +216,8 @@ function renderPublic(){
       </article>`).join(''):'<div class="notice team-empty">لسه مفيش أعضاء مضافين في فريق الموقع.</div>';
   }
 
+  const news=Array.isArray(pub.settings.news)?pub.settings.news:[];
+  if($('#newsGrid'))$('#newsGrid').innerHTML=news.length?[...news].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).map(n=>`<article class="news-card"><small>TURBO NEWS</small><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p><time>${new Date(n.createdAt||Date.now()).toLocaleDateString('ar-EG')}</time></article>`).join(''):'<div class="notice">لا توجد أخبار مضافة حاليًا.</div>';
   $('#creatorGrid').innerHTML=pub.creators.length?pub.creators.map(c=>`<a class="creator" href="${esc(c.url)}" target="_blank" rel="noopener"><img src="${esc(c.image||'')}" alt="${esc(c.name)}"><div class="meta"><h3>${esc(c.name)}</h3>${c.isLive?'<span class="live">● LIVE</span>':'<span class="offline">OFFLINE</span>'}</div></a>`).join(''):'<div class="notice">هيتم إضافة صناع المحتوى من لوحة التحكم.</div>';
   $('#applyState').textContent=pub.settings.applicationsOpen?'التقديم مفتوح الآن':'التقديم مغلق حاليًا';
   renderJobs();
@@ -430,6 +432,8 @@ async function renderAdmin(){
     <div class="admin-summary"><div class="admin-stat"><b>${st.applications.length}</b><span>كل التقديمات</span></div><div class="admin-stat"><b>${st.applications.filter(a=>a.status==='pending').length}</b><span>قيد المراجعة</span></div><div class="admin-stat"><b>${st.applications.filter(a=>['pre_accepted','voice_review'].includes(a.status)).length}</b><span>المرحلة الثانية</span></div><div class="admin-stat"><b>${st.applications.filter(a=>a.status==='voice_passed').length}</b><span>مقبولين نهائيًا</span></div></div>
     <div class="admin-control-grid">
       <div class="card admin-settings-card"><h3>حالة التقديم</h3><p>الحالة الحالية: <b>${st.settings.applicationsOpen?'مفتوح':'مغلق'}</b></p><button class="${st.settings.applicationsOpen?'danger':'btn primary'}" onclick="toggleApps(${!st.settings.applicationsOpen})">${st.settings.applicationsOpen?'قفل التقديم':'فتح التقديم'}</button></div>
+      <div class="card admin-settings-card"><h3>تقديمات الوظائف</h3><p>الحالة الحالية: <b>${st.settings.jobApplicationsOpen!==false?'مفتوحة':'مغلقة'}</b></p><button class="${st.settings.jobApplicationsOpen!==false?'danger':'btn primary'}" onclick="toggleJobApps(${st.settings.jobApplicationsOpen===false})">${st.settings.jobApplicationsOpen!==false?'قفل تقديمات الوظائف':'فتح تقديمات الوظائف'}</button></div>
+      <div class="card admin-content-settings"><h3>إضافة خبر</h3><p>اكتب الخبر وهينزل مباشرة في قسم الأخبار بالموقع.</p><form id="newsForm"><div class="field"><label>عنوان الخبر</label><input name="title" maxlength="120" required></div><div class="field"><label>محتوى الخبر</label><textarea name="body" maxlength="2000" required></textarea></div><button class="smallbtn" type="submit">نشر الخبر</button></form><div class="admin-news-list">${(st.settings.news||[]).slice().reverse().map(n=>`<div class="admin-news-item"><div><b>${esc(n.title)}</b><small>${esc(n.body)}</small></div><button class="danger mini" onclick="deleteNews('${esc(n.id)}')">حذف</button></div>`).join('')||'<div class="notice">لا توجد أخبار بعد.</div>'}</div></div>
 
       <div class="card admin-content-settings">
         <h3>محتوى الموقع</h3>
@@ -499,7 +503,7 @@ async function renderAdmin(){
     </div>
   </div>`;
   filterApplications();
-  $('#creatorForm').onsubmit=addCreator;$('#slotForm').onsubmit=addSlot;if($('#siteSettingsForm'))$('#siteSettingsForm').onsubmit=saveSiteSettings;if($('#brandingForm'))$('#brandingForm').onsubmit=saveBrandingSettings;if($('#publicTeamForm'))$('#publicTeamForm').onsubmit=addPublicTeamMember;if($('#workshopForm'))$('#workshopForm').onsubmit=addWorkshop;
+  $('#creatorForm').onsubmit=addCreator;$('#slotForm').onsubmit=addSlot;if($('#siteSettingsForm'))$('#siteSettingsForm').onsubmit=saveSiteSettings;if($('#brandingForm'))$('#brandingForm').onsubmit=saveBrandingSettings;if($('#publicTeamForm'))$('#publicTeamForm').onsubmit=addPublicTeamMember;if($('#workshopForm'))$('#workshopForm').onsubmit=addWorkshop;if($('#newsForm'))$('#newsForm').onsubmit=addNews;
   if(st.viewer?.isManager && $('#panelAdminForm'))$('#panelAdminForm').onsubmit=addPanelAdmin;
 }
 async function addPanelAdmin(e){
@@ -601,6 +605,9 @@ async function addWorkshop(e){e.preventDefault();const f=Object.fromEntries(new 
 window.deleteWorkshop=async id=>{if(!confirm('حذف الورشة؟'))return;await api(`/api/admin/mechanic-workshops/${encodeURIComponent(id)}`,{method:'DELETE'});toast('تم حذف الورشة');await renderAdmin();pub=await api('/api/public');renderPublic()};
 
 async function saveSiteSettings(e){e.preventDefault();const f=new FormData(e.target);const aboutText=String(f.get('aboutText')||'').trim();const rules=String(f.get('rules')||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);try{await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({aboutText,rules})});pub=await api('/api/public');renderPublic();toast('تم حفظ محتوى الموقع');await renderAdmin()}catch(err){toast('تعذر حفظ المحتوى')}}
+window.toggleJobApps=async v=>{await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({jobApplicationsOpen:v})});pub=await api('/api/public');renderPublic();renderAdmin();toast(v?'تم فتح تقديمات الوظائف':'تم قفل تقديمات الوظائف')};
+async function addNews(e){e.preventDefault();const f=new FormData(e.target);const item={id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),title:String(f.get('title')||'').trim(),body:String(f.get('body')||'').trim(),createdAt:Date.now()};const news=[...(st.settings.news||[]),item];await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({news})});pub=await api('/api/public');renderPublic();await renderAdmin();toast('تم نشر الخبر')}
+window.deleteNews=async id=>{const news=(st.settings.news||[]).filter(n=>n.id!==id);await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({news})});pub=await api('/api/public');renderPublic();await renderAdmin();toast('تم حذف الخبر')};
 window.toggleApps=async v=>{await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({applicationsOpen:v})});pub=await api('/api/public');renderPublic();renderAdmin();toast(v?'تم فتح التقديم':'تم قفل التقديم')};
 window.voicePass=async id=>{await api(`/api/admin/users/${id}/voice-pass`,{method:'POST',body:'{}'});toast('تم منح تصريح الدخول');renderAdmin()};
 window.resetUser=async id=>{await api(`/api/admin/users/${id}/reset`,{method:'POST',body:'{}'});toast('تم السماح بإعادة التقديم');renderAdmin()};
@@ -860,6 +867,7 @@ function renderJobs(){
 window.openJobPortal=function(type){
   if(!token){toast('سجّل دخول Discord الأول');location.href=$('#loginBtn').href;return}
   const j=JOB_META[type];if(!j)return;
+  if(pub?.settings?.jobApplicationsOpen===false){toast('تقديمات الوظائف مغلقة حاليًا');return}
   const active=(me?.jobApplications||[]).find(x=>x.type===type&&['pending','accepting','accepted'].includes(x.status));
   if(active){toast(active.status==='accepted'?'أنت مقبول بالفعل في التقديم ده':'عندك تقديم لنفس الوظيفة قيد المراجعة');return}
   const shops=(pub?.mechanicWorkshops||[]);
@@ -896,7 +904,8 @@ async function submitJobApplication(e){
     JOB_TICKET_NO_VIEW:'البوت مش قادر يشوف كاتجوري التذاكر.',
     JOB_REVIEW_CHANNEL_INVALID:'إعداد روم المراجعة غير صحيح.',
     JOB_REVIEW_SEND_FAILED:'Discord رفض إرسال التقديم بعد الفحص. راجع صلاحيات البوت.',
-    CORS_NOT_ALLOWED:'رابط الموقع غير مسموح به في إعدادات البوت.'
+    CORS_NOT_ALLOWED:'رابط الموقع غير مسموح به في إعدادات البوت.',
+    JOB_APPLICATIONS_CLOSED:'تقديمات الوظائف مغلقة حاليًا.'
   };
   form.dataset.sending='1';
   if(btn){btn.disabled=true;btn.textContent='جاري إرسال التقديم...'}

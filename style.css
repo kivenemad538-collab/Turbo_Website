@@ -3232,3 +3232,6 @@ main{
 #jobApplyForm button[disabled]{opacity:.58!important;cursor:not-allowed!important;filter:saturate(.55)!important}
 #jobFormError{margin:12px 0!important;line-height:1.8!important}
 .job-state-accepting{color:#d9b86c!important}
+
+/* V32 news */
+.news-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}.news-card{border:1px solid rgba(71,177,235,.22);background:linear-gradient(145deg,rgba(6,18,28,.86),rgba(3,10,16,.94));border-radius:18px;padding:22px;min-height:180px}.news-card small{color:#55bfff;letter-spacing:.18em;font-weight:800}.news-card h3{font-size:1.25rem;margin:10px 0;color:#f5f9fc}.news-card p{color:#aab8c5;line-height:1.9;white-space:pre-wrap}.news-card time{display:block;margin-top:16px;color:#5f7485;font-size:.78rem}.admin-news-list{display:grid;gap:8px;margin-top:14px}.admin-news-item{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid rgba(71,177,235,.16);padding:12px;border-radius:12px}.admin-news-item div{display:grid;gap:4px}.admin-news-item small{color:#8093a4;max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.danger.mini{padding:7px 11px;font-size:.78rem}
