@@ -59,11 +59,14 @@ const seed = {
   settings:{
     applicationsOpen:true,
     aboutText:'Turbo RP هو سيرفر رول بلاي عربي بنركز فيه على السيناريوهات والتفاعل وجودة التجربة.',
-    rules:[]
+    rules:[],
+    logoImage:'',
+    cityBackground:''
   },
   counters:{application:0},
   applications:[],
   creators:[],
+  teamMembers:[],
   interviewSlots:[],
   panelAdmins:[],
   audit:[]
@@ -116,7 +119,7 @@ async function readDB(){
   const pool=await ensurePg();
   if(pool){
     const result=await pool.query('SELECT data FROM turbo_state WHERE id=$1',['main']);
-    if(result.rows[0]?.data) return result.rows[0].data;
+    if(result.rows[0]?.data) return ensureNewWebsiteFields(result.rows[0].data);
     // أول تشغيل على قاعدة خارجية: لو فيه ملف قديم على نفس السيرفر، هيتنقل تلقائيًا.
     const old=await readLocalFile();
     const initial=old || structuredClone(seed);
@@ -125,13 +128,13 @@ async function readDB(){
        ON CONFLICT (id) DO UPDATE SET data=EXCLUDED.data, updated_at=NOW()`,
       ['main',JSON.stringify(initial)]
     );
-    return initial;
+    return ensureNewWebsiteFields(initial);
   }
   const local=await readLocalFile();
-  if(local) return local;
+  if(local) return ensureNewWebsiteFields(local);
   const initial=structuredClone(seed);
   await writeLocalFile(initial);
-  return initial;
+  return ensureNewWebsiteFields(initial);
 }
 
 async function writeDB(db){
@@ -167,6 +170,15 @@ function validateImportedDB(db){
     && Array.isArray(db.interviewSlots)
     && Array.isArray(db.panelAdmins)
     && Array.isArray(db.audit);
+}
+
+
+function ensureNewWebsiteFields(db){
+  if(!db.settings || typeof db.settings!=='object') db.settings={};
+  if(typeof db.settings.logoImage!=='string') db.settings.logoImage='';
+  if(typeof db.settings.cityBackground!=='string') db.settings.cityBackground='';
+  if(!Array.isArray(db.teamMembers)) db.teamMembers=[];
+  return db;
 }
 
 // ===================== AUTH =================================
@@ -530,7 +542,14 @@ app.get('/health',(req,res)=>res.json({ok:true,name:'Turbo RP',time:new Date().t
 app.get('/api/public',asyncRoute(async(req,res)=>{
   const db=await readDB();
   res.json({
-    settings:{applicationsOpen:db.settings.applicationsOpen,aboutText:db.settings.aboutText,rules:db.settings.rules},
+    settings:{
+      applicationsOpen:db.settings.applicationsOpen,
+      aboutText:db.settings.aboutText,
+      rules:db.settings.rules,
+      logoImage:db.settings.logoImage||'',
+      cityBackground:db.settings.cityBackground||''
+    },
+    teamMembers:[...(db.teamMembers||[])].sort((a,b)=>(a.order||0)-(b.order||0)),
     creators:[...db.creators].sort((a,b)=>(a.order||0)-(b.order||0)),
     questions,
     interviewSlots:db.interviewSlots.filter(s=>!s.bookedBy&&new Date(s.at)>new Date()).sort((a,b)=>new Date(a.at)-new Date(b.at))
@@ -714,11 +733,13 @@ app.get('/api/admin/storage-status',auth,owner,asyncRoute(async(req,res)=>{
 }));
 
 app.patch('/api/admin/settings',auth,admin,asyncRoute(async(req,res)=>{
-  const {applicationsOpen,aboutText,rules}=req.body;
+  const {applicationsOpen,aboutText,rules,logoImage,cityBackground}=req.body;
   await mutate(db=>{
     if(typeof applicationsOpen==='boolean')db.settings.applicationsOpen=applicationsOpen;
     if(typeof aboutText==='string')db.settings.aboutText=aboutText.slice(0,5000);
     if(Array.isArray(rules))db.settings.rules=rules.map(x=>String(x).slice(0,1000));
+    if(typeof logoImage==='string')db.settings.logoImage=logoImage.slice(0,900000);
+    if(typeof cityBackground==='string')db.settings.cityBackground=cityBackground.slice(0,4000);
     db.audit.push({at:Date.now(),by:req.user.id,action:'settings_update'});
   });
   res.json({ok:true});
@@ -846,6 +867,43 @@ app.post('/api/admin/applications/:id/action',auth,admin,asyncRoute(async(req,re
     await role(a.discordId,IDS.PRE_ACCEPTED_ROLE_ID,false);
   }
   res.json({ok:true,application:a});
+}));
+
+
+app.post('/api/admin/team-members',auth,admin,asyncRoute(async(req,res)=>{
+  const name=String(req.body?.name||'').trim().slice(0,80);
+  const rank=String(req.body?.rank||'').trim().slice(0,80);
+  const image=String(req.body?.image||'').trim().slice(0,2000);
+  const order=Number(req.body?.order||0);
+  if(!name||!rank||!image)return res.status(400).json({error:'MISSING_TEAM_DATA'});
+
+  const member={
+    id:crypto.randomUUID(),
+    name,
+    rank,
+    image,
+    order:Number.isFinite(order)?order:0,
+    createdAt:Date.now(),
+    createdBy:req.user.id
+  };
+
+  await mutate(db=>{
+    db.teamMembers=Array.isArray(db.teamMembers)?db.teamMembers:[];
+    db.teamMembers.push(member);
+    db.audit.push({at:Date.now(),by:req.user.id,action:'public_team_add',teamMemberId:member.id});
+  });
+
+  res.json({ok:true,member});
+}));
+
+app.delete('/api/admin/team-members/:id',auth,admin,asyncRoute(async(req,res)=>{
+  const id=String(req.params.id||'');
+  await mutate(db=>{
+    db.teamMembers=Array.isArray(db.teamMembers)?db.teamMembers:[];
+    db.teamMembers=db.teamMembers.filter(x=>x.id!==id);
+    db.audit.push({at:Date.now(),by:req.user.id,action:'public_team_remove',teamMemberId:id});
+  });
+  res.json({ok:true});
 }));
 
 app.post('/api/admin/creators',auth,admin,asyncRoute(async(req,res)=>{

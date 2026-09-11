@@ -175,7 +175,7 @@ async function init(){
 function renderOffline(msg='الموقع جاهز، لكن رابط Railway لسه محتاج يتضاف في config.js.'){
   $('#applyState').textContent='الربط غير مكتمل';
   $('#aboutText').textContent='Turbo RP هو سيرفر رول بلاي عربي يهتم بالسيناريوهات وجودة التجربة وتفاعل اللاعبين.';
-  $('#creatorGrid').innerHTML='<div class="notice">صناع المحتوى هيظهروا هنا بعد اتصال الموقع بالبوت.</div>';
+  $('#creatorGrid').innerHTML='<div class="notice">صناع المحتوى هيظهروا هنا بعد اتصال الموقع بالبوت.</div>';if($('#teamGrid'))$('#teamGrid').innerHTML='<div class="notice">فريق Turbo هيظهر هنا بعد اتصال الموقع.</div>';
   renderRules([]);
   $('#applyBox').innerHTML=`<div class="notice bad">${esc(msg)}</div><br><button class="discord-btn" onclick="oauthLogin()">تسجيل دخول Discord</button>`;
   $('#statusBox').innerHTML='<div class="notice">بعد تسجيل الدخول هتشوف حالة تقديمك هنا.</div>';
@@ -184,6 +184,38 @@ function renderOffline(msg='الموقع جاهز، لكن رابط Railway لس
 function renderPublic(){
   $('#aboutText').textContent=pub.settings.aboutText;
   renderRules(pub.settings.rules || []);
+
+  const logoSrc=String(pub.settings.logoImage||'turbo-logo.png?v=24').trim()||'turbo-logo.png?v=24';
+  document.querySelectorAll('[data-turbo-logo]').forEach(img=>{if(img.src!==logoSrc)img.src=logoSrc});
+
+  const city=String(pub.settings.cityBackground||'').trim();
+  const cityPhoto=$('#cityPhoto');
+  if(cityPhoto){
+    if(city){
+      cityPhoto.style.backgroundImage=`url(${JSON.stringify(city)})`;
+      document.body.classList.add('has-custom-city');
+    }else{
+      cityPhoto.style.backgroundImage='';
+      document.body.classList.remove('has-custom-city');
+    }
+  }
+
+  const team=Array.isArray(pub.teamMembers)?pub.teamMembers:[];
+  if($('#teamGrid')){
+    $('#teamGrid').innerHTML=team.length?team.map((m,i)=>`
+      <article class="team-card" style="--team-delay:${Math.min(i,8)*45}ms">
+        <div class="team-photo">
+          <img src="${esc(m.image||logoSrc)}" alt="${esc(m.name||'Turbo Team')}">
+          <span>${String(i+1).padStart(2,'0')}</span>
+        </div>
+        <div class="team-info">
+          <small>TURBO TEAM</small>
+          <h3>${esc(m.name||'')}</h3>
+          <b>${esc(m.rank||'Team')}</b>
+        </div>
+      </article>`).join(''):'<div class="notice team-empty">لسه مفيش أعضاء مضافين في فريق الموقع.</div>';
+  }
+
   $('#creatorGrid').innerHTML=pub.creators.length?pub.creators.map(c=>`<a class="creator" href="${esc(c.url)}" target="_blank" rel="noopener"><img src="${esc(c.image||'')}" alt="${esc(c.name)}"><div class="meta"><h3>${esc(c.name)}</h3>${c.isLive?'<span class="live">● LIVE</span>':'<span class="offline">OFFLINE</span>'}</div></a>`).join(''):'<div class="notice">هيتم إضافة صناع المحتوى من لوحة التحكم.</div>';
   $('#applyState').textContent=pub.settings.applicationsOpen?'التقديم مفتوح الآن':'التقديم مغلق حاليًا';
 }
@@ -347,6 +379,26 @@ function staffCard(x,canRemove=false){
     ${canRemove?`<button class="danger staff-remove" onclick="removePanelAdmin('${id}')">حذف</button>`:''}
   </div>`;
 }
+
+function publicTeamCard(m){
+  return `<div class="admin-team-row">
+    <img src="${esc(m.image||'turbo-logo.png?v=24')}" alt="${esc(m.name||'')}">
+    <div><b>${esc(m.name||'')}</b><span>${esc(m.rank||'')}</span></div>
+    <button class="danger" type="button" onclick="deleteTeamMember('${esc(m.id)}')">حذف</button>
+  </div>`;
+}
+
+function fileToDataUrl(file,maxBytes=650000){
+  return new Promise((resolve,reject)=>{
+    if(!file)return resolve('');
+    if(file.size>maxBytes)return reject(new Error('IMAGE_TOO_LARGE'));
+    const reader=new FileReader();
+    reader.onload=()=>resolve(String(reader.result||''));
+    reader.onerror=()=>reject(new Error('READ_FAILED'));
+    reader.readAsDataURL(file);
+  });
+}
+
 async function renderAdmin(){
   adminState=await api('/api/admin/state');
   const st=adminState;
@@ -375,7 +427,49 @@ async function renderAdmin(){
   $('#adminBox').innerHTML=`<div class="admin-dashboard">
     <div class="admin-topline"><div><span>TURBO CONTROL</span><h3>لوحة التحكم</h3></div><div class="admin-viewer">${viewerLabel}</div></div>
     <div class="admin-summary"><div class="admin-stat"><b>${st.applications.length}</b><span>كل التقديمات</span></div><div class="admin-stat"><b>${st.applications.filter(a=>a.status==='pending').length}</b><span>قيد المراجعة</span></div><div class="admin-stat"><b>${st.applications.filter(a=>['pre_accepted','voice_review'].includes(a.status)).length}</b><span>المرحلة الثانية</span></div><div class="admin-stat"><b>${st.applications.filter(a=>a.status==='voice_passed').length}</b><span>مقبولين نهائيًا</span></div></div>
-    <div class="admin-control-grid"><div class="card admin-settings-card"><h3>حالة التقديم</h3><p>الحالة الحالية: <b>${st.settings.applicationsOpen?'مفتوح':'مغلق'}</b></p><button class="${st.settings.applicationsOpen?'danger':'btn primary'}" onclick="toggleApps(${!st.settings.applicationsOpen})">${st.settings.applicationsOpen?'قفل التقديم':'فتح التقديم'}</button></div><div class="card admin-content-settings"><h3>محتوى الموقع</h3><p>عدّل نبذة Turbo والقوانين الإضافية بدون لمس الكود.</p><form id="siteSettingsForm"><div class="field"><label>من نحن</label><textarea name="aboutText">${esc(st.settings.aboutText||'')}</textarea></div><div class="field"><label>قوانين إضافية — كل قانون في سطر</label><textarea name="rules">${esc((st.settings.rules||[]).join('\n'))}</textarea></div><button class="smallbtn" type="submit">حفظ محتوى الموقع</button></form></div>${staffControls}${ownerControls}</div>
+    <div class="admin-control-grid">
+      <div class="card admin-settings-card"><h3>حالة التقديم</h3><p>الحالة الحالية: <b>${st.settings.applicationsOpen?'مفتوح':'مغلق'}</b></p><button class="${st.settings.applicationsOpen?'danger':'btn primary'}" onclick="toggleApps(${!st.settings.applicationsOpen})">${st.settings.applicationsOpen?'قفل التقديم':'فتح التقديم'}</button></div>
+
+      <div class="card admin-content-settings">
+        <h3>محتوى الموقع</h3>
+        <p>عدّل نبذة Turbo والقوانين الإضافية بدون لمس الكود.</p>
+        <form id="siteSettingsForm">
+          <div class="field"><label>من نحن</label><textarea name="aboutText">${esc(st.settings.aboutText||'')}</textarea></div>
+          <div class="field"><label>قوانين إضافية — كل قانون في سطر</label><textarea name="rules">${esc((st.settings.rules||[]).join('\n'))}</textarea></div>
+          <button class="smallbtn" type="submit">حفظ محتوى الموقع</button>
+        </form>
+      </div>
+
+      <div class="card admin-branding-card">
+        <div class="admin-card-kicker">BRANDING</div>
+        <h3>اللوجو وخلفية المدينة</h3>
+        <p>ده المكان الخاص بالهوية البصرية. تقدر تحط رابط اللوجو أو ترفعه من جهازك، وتحط صورة مدينة تتحرك بهدوء في الخلفية.</p>
+        <form id="brandingForm" class="form-grid">
+          <div class="field full"><label>رابط اللوجو</label><input name="logoImage" value="${esc(st.settings.logoImage||'')}" placeholder="https://.../logo.png"></div>
+          <div class="field full"><label>أو ارفع لوجو من الجهاز — حد أقصى 650KB</label><input id="logoFileInput" name="logoFile" type="file" accept="image/png,image/jpeg,image/webp"></div>
+          <div class="branding-preview"><img src="${esc(st.settings.logoImage||'turbo-logo.png?v=24')}" alt="Turbo logo preview"><span>معاينة اللوجو</span></div>
+          <div class="field full"><label>رابط خلفية المدينة</label><input name="cityBackground" value="${esc(st.settings.cityBackground||'')}" placeholder="https://.../city.jpg"></div>
+          <small class="field-hint">الخلفية نفسها بتتحرك تلقائيًا بحركة بطيئة. لو سيبت الرابط فاضي هتظهر خلفية Skyline متحركة من الموقع.</small>
+          <button class="smallbtn" type="submit">حفظ الهوية</button>
+        </form>
+      </div>
+
+      <div class="card admin-public-team-card">
+        <div class="admin-card-kicker">PUBLIC TEAM</div>
+        <h3>فريق Turbo الظاهر في الموقع</h3>
+        <p><b>ده منفصل تمامًا عن Admin / Manager / Owner.</b> الشخص هنا للعرض فقط، والرتبة بتكتبها بنفسك ومش بتديه أي صلاحيات.</p>
+        <form id="publicTeamForm" class="form-grid">
+          <div class="field"><input name="name" placeholder="اسم الشخص" required></div>
+          <div class="field"><input name="rank" placeholder="الرتبة المكتوبة في الموقع" required></div>
+          <div class="field full"><input name="image" placeholder="رابط الصورة" required></div>
+          <div class="field"><input name="order" type="number" value="${(st.teamMembers||[]).length+1}" min="0" placeholder="الترتيب"></div>
+          <button class="btn primary" type="submit">إضافة للفريق</button>
+        </form>
+        <div class="admin-public-team-list">${(st.teamMembers||[]).sort((a,b)=>(a.order||0)-(b.order||0)).map(publicTeamCard).join('')||'<div class="notice">لسه مفيش أعضاء مضافين للفريق العام.</div>'}</div>
+      </div>
+
+      ${staffControls}${ownerControls}
+    </div>
     <div class="card applications-card"><div class="applications-toolbar"><div><span>APPLICATION REVIEW</span><h3>مراجعة التقديمات</h3></div><div class="application-search"><input id="applicationSearch" placeholder="ابحث بالاسم أو Discord ID أو رقم التقديم" oninput="filterApplications()"><span>⌕</span></div></div><div class="application-filters"><button class="application-filter-btn active" data-filter="all" onclick="setApplicationFilter('all')">الكل</button><button class="application-filter-btn" data-filter="review" onclick="setApplicationFilter('review')">قيد المراجعة</button><button class="application-filter-btn" data-filter="accepted" onclick="setApplicationFilter('accepted')">المقبولين</button><button class="application-filter-btn" data-filter="rejected" onclick="setApplicationFilter('rejected')">المرفوضين / المحظورين</button></div><div id="applicationList" class="application-list"></div></div>
     <div class="admin-grid"><div class="card"><h3>إضافة صانع محتوى</h3><form id="creatorForm" class="form-grid"><div class="field"><input name="name" placeholder="الاسم" required></div><div class="field"><input name="order" type="number" placeholder="الترتيب" value="1"></div><div class="field full"><input name="image" placeholder="لينك الصورة" required></div><div class="field full"><input name="url" placeholder="لينك الصفحة" required></div><div class="field"><select name="platform"><option value="youtube">YouTube</option><option value="twitch">Twitch</option><option value="other">Other</option></select></div><div class="field"><input name="platformId" placeholder="Channel ID / Twitch login"></div><button class="btn primary" type="submit">إضافة</button></form><div class="list">${st.creators.map(c=>`<div class="item"><span>${esc(c.name)} ${c.isLive?'🔴':''}</span><button class="danger" onclick="delCreator('${c.id}')">حذف</button></div>`).join('')}</div></div><div class="card"><h3>مواعيد المقابلات</h3><form id="slotForm"><div class="field"><input name="at" type="datetime-local" required></div><div class="field"><input name="note" placeholder="ملاحظة / روم المقابلة"></div><br><button class="btn primary" id="addSlotBtn" type="submit">إضافة موعد</button></form><div class="list">${st.interviewSlots.map(s=>`<div class="item"><span>${new Date(s.at).toLocaleString('ar-EG')} ${s.bookedBy?'• محجوز':''}</span>${!s.bookedBy?`<button class="danger" onclick="delSlot('${s.id}')">حذف</button>`:''}</div>`).join('')}</div></div></div>
     <div id="applicationReview" class="application-review hidden"></div>
@@ -386,7 +480,7 @@ async function renderAdmin(){
     </div>
   </div>`;
   filterApplications();
-  $('#creatorForm').onsubmit=addCreator;$('#slotForm').onsubmit=addSlot;if($('#siteSettingsForm'))$('#siteSettingsForm').onsubmit=saveSiteSettings;
+  $('#creatorForm').onsubmit=addCreator;$('#slotForm').onsubmit=addSlot;if($('#siteSettingsForm'))$('#siteSettingsForm').onsubmit=saveSiteSettings;if($('#brandingForm'))$('#brandingForm').onsubmit=saveBrandingSettings;if($('#publicTeamForm'))$('#publicTeamForm').onsubmit=addPublicTeamMember;
   if(st.viewer?.isManager && $('#panelAdminForm'))$('#panelAdminForm').onsubmit=addPanelAdmin;
 }
 async function addPanelAdmin(e){
@@ -425,6 +519,51 @@ window.importTurboBackup=async input=>{
     await api('/api/admin/backup/import',{method:'POST',body:JSON.stringify(data)});
     toast('تم استرجاع كل البيانات');await renderAdmin();
   }catch(e){toast(`تعذر استرجاع النسخة: ${e.message}`)}finally{input.value=''}
+};
+
+
+async function saveBrandingSettings(e){
+  e.preventDefault();
+  const form=e.target;
+  const fd=new FormData(form);
+  let logoImage=String(fd.get('logoImage')||'').trim();
+  const cityBackground=String(fd.get('cityBackground')||'').trim();
+
+  try{
+    const file=form.querySelector('#logoFileInput')?.files?.[0];
+    if(file)logoImage=await fileToDataUrl(file,650000);
+    await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({logoImage,cityBackground})});
+    pub=await api('/api/public');
+    renderPublic();
+    toast('تم حفظ اللوجو وخلفية المدينة');
+    await renderAdmin();
+  }catch(err){
+    toast(err.message==='IMAGE_TOO_LARGE'?'حجم اللوجو أكبر من 650KB':'تعذر حفظ الهوية');
+  }
+}
+
+async function addPublicTeamMember(e){
+  e.preventDefault();
+  const f=Object.fromEntries(new FormData(e.target));
+  f.order=Number(f.order||0);
+  try{
+    await api('/api/admin/team-members',{method:'POST',body:JSON.stringify(f)});
+    toast('تمت إضافة الشخص للفريق العام');
+    await renderAdmin();
+    pub=await api('/api/public');
+    renderPublic();
+  }catch(err){
+    toast('تعذر إضافة الشخص');
+  }
+}
+
+window.deleteTeamMember=async id=>{
+  if(!confirm('حذف هذا الشخص من الفريق الظاهر في الموقع؟'))return;
+  await api(`/api/admin/team-members/${encodeURIComponent(id)}`,{method:'DELETE'});
+  toast('تم حذف الشخص من الفريق');
+  await renderAdmin();
+  pub=await api('/api/public');
+  renderPublic();
 };
 
 async function saveSiteSettings(e){e.preventDefault();const f=new FormData(e.target);const aboutText=String(f.get('aboutText')||'').trim();const rules=String(f.get('rules')||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);try{await api('/api/admin/settings',{method:'PATCH',body:JSON.stringify({aboutText,rules})});pub=await api('/api/public');renderPublic();toast('تم حفظ محتوى الموقع');await renderAdmin()}catch(err){toast('تعذر حفظ المحتوى')}}
