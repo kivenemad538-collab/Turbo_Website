@@ -2756,3 +2756,67 @@ footer{
     grid-template-columns:1fr!important;
   }
 }
+
+/* =========================================================
+   V27 — DESKTOP SPACING + GATE / SLIDER FINAL LAYOUT FIX
+   ========================================================= */
+@media (min-width: 981px){
+  main{width:min(1320px,92vw)!important;overflow:visible!important}
+  .lcrp-hero{
+    display:grid!important;
+    grid-template-columns:minmax(0,1.12fr) minmax(360px,.88fr)!important;
+    grid-template-areas:
+      "copy visual"
+      "strip strip"
+      "ticker ticker"
+      "gate gate"!important;
+    column-gap:64px!important;
+    row-gap:26px!important;
+    padding:58px 48px 54px!important;
+    overflow:visible!important;
+  }
+  .lcrp-copy{grid-area:copy!important;align-self:center!important;min-width:0!important}
+  .lcrp-visual{grid-area:visual!important;min-width:0!important;min-height:390px!important}
+  .lcrp-server-strip{grid-area:strip!important;margin-top:8px!important}
+  .hero-ticker{grid-area:ticker!important;margin:0!important}
+  .lcrp-gateway{
+    grid-area:gate!important;
+    margin-top:4px!important;
+    padding:32px 34px 34px!important;
+    min-height:290px!important;
+    overflow:visible!important;
+  }
+  .lcrp-gateway .rules-gateway-top{
+    min-height:112px!important;
+    grid-template-columns:92px minmax(0,1fr) 92px!important;
+    gap:28px!important;
+    padding:0 8px 8px!important;
+  }
+  .lcrp-gateway .rules-gateway-copy strong{font-size:38px!important;line-height:1.25!important}
+  .lcrp-gateway .rules-gateway-orbit{width:76px!important;height:76px!important;justify-self:start!important}
+  .lcrp-gateway .rules-marquee{height:34px!important;margin:14px 0 18px!important;display:flex!important;align-items:center!important;overflow:hidden!important}
+  .lcrp-gateway .rules-drag-track{
+    width:100%!important;
+    height:72px!important;
+    margin:0!important;
+    overflow:hidden!important;
+    border-radius:18px!important;
+    box-sizing:border-box!important;
+  }
+  .lcrp-gateway .rules-drag-thumb{
+    width:54px!important;
+    height:54px!important;
+    top:8px!important;
+    left:8px!important;
+    border-radius:15px!important;
+    font-size:25px!important;
+    overflow:visible!important;
+  }
+  .lcrp-gateway .rules-drag-thumb span{line-height:1!important;display:grid!important;place-items:center!important;width:100%!important;height:100%!important}
+}
+
+/* Never let the slider control be cut by inherited old rules. */
+#rulesDragLauncher,#rulesDragTrack{box-sizing:border-box!important}
+#rulesDragLauncher{overflow:visible!important}
+#rulesDragTrack{isolation:isolate!important}
+#rulesDragThumb{box-sizing:border-box!important}
