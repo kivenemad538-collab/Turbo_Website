@@ -635,7 +635,12 @@ init();
   const thumb=document.getElementById('rulesDragThumb');
   if(!track||!thumb)return;
   let dragging=false,startX=0,startDrag=0,current=0,max=0,pointerId=null;
-  const recalc=()=>{max=Math.max(0,track.clientWidth-thumb.offsetWidth-18)};
+  const recalc=()=>{
+    const cs=getComputedStyle(thumb);
+    const left=parseFloat(cs.left)||0;
+    const rightPad=left;
+    max=Math.max(0,track.clientWidth-thumb.offsetWidth-left-rightPad);
+  };
   const setDrag=v=>{recalc();current=Math.max(0,Math.min(max,v));track.style.setProperty('--drag',current+'px');track.setAttribute('aria-valuenow',String(max?Math.round(current/max*100):0))};
   const openRules=()=>{current=max;track.style.setProperty('--drag',max+'px');track.setAttribute('aria-valuenow','100');track.classList.add('completed');if(navigator.vibrate)navigator.vibrate(25);setTimeout(()=>{window.__turboUnlockRules?.();location.hash='rules';document.getElementById('rules')?.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{track.classList.remove('completed');setDrag(0)},950)},180)};
   const finish=()=>{if(!dragging)return;dragging=false;track.classList.remove('dragging');recalc();if(max&&current/max>=.72)openRules();else setDrag(0)};
@@ -657,7 +662,7 @@ init();
   track.addEventListener('dblclick',openRules);
   track.addEventListener('keydown',e=>{recalc();if(e.key==='ArrowRight'){setDrag(current+Math.max(28,max*.12));e.preventDefault()}if(e.key==='ArrowLeft'){setDrag(current-Math.max(28,max*.12));e.preventDefault()}if(e.key==='Enter'||e.key===' '){openRules();e.preventDefault()}});
   window.addEventListener('resize',()=>setDrag(Math.min(current,max)));
-  requestAnimationFrame(()=>setDrag(0));
+  track.style.setProperty('--drag','0px');requestAnimationFrame(()=>setDrag(0));
 })();
 
 // v10: rules are physically absent until the slider is completed.

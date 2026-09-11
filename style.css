@@ -2820,3 +2820,401 @@ footer{
 #rulesDragLauncher{overflow:visible!important}
 #rulesDragTrack{isolation:isolate!important}
 #rulesDragThumb{box-sizing:border-box!important}
+
+
+/* =========================================================
+   TURBO V28 — CLEAN SECTION ARCHITECTURE
+   The gate is now physically OUTSIDE the hero.
+   ========================================================= */
+
+main{
+  width:min(1180px,calc(100% - 40px))!important;
+  max-width:1180px!important;
+  margin-inline:auto!important;
+  overflow:visible!important;
+}
+
+/* HERO only contains hero content/status/ticker now */
+.lcrp-hero{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.08fr) minmax(320px,.92fr)!important;
+  grid-template-areas:
+    "copy visual"
+    "strip strip"
+    "ticker ticker"!important;
+  gap:22px 46px!important;
+  padding:48px 46px 34px!important;
+  margin:0!important;
+  min-height:0!important;
+  height:auto!important;
+  overflow:hidden!important;
+  border:1px solid rgba(91,151,180,.12)!important;
+  background:
+    radial-gradient(460px 280px at 82% 36%,rgba(64,145,184,.075),transparent 72%),
+    rgba(5,10,14,.94)!important;
+}
+
+.lcrp-copy{
+  grid-area:copy!important;
+  align-self:center!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  min-width:0!important;
+  width:auto!important;
+}
+
+.lcrp-visual{
+  grid-area:visual!important;
+  min-height:300px!important;
+  max-width:390px!important;
+  justify-self:center!important;
+  align-self:center!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  width:100%!important;
+}
+
+.lcrp-server-strip{
+  grid-area:strip!important;
+  margin:2px 0 0!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  width:100%!important;
+}
+
+.hero-ticker{
+  grid-area:ticker!important;
+  margin:0!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  width:100%!important;
+}
+
+/* Remove every old gate-grid influence from the hero. */
+.lcrp-hero>.lcrp-gateway{
+  display:none!important;
+}
+
+/* Standalone gate zone */
+.gate-zone{
+  width:100%!important;
+  margin:54px 0 76px!important;
+  padding:0!important;
+  position:relative!important;
+  overflow:visible!important;
+}
+
+.gate-zone-head{
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:space-between!important;
+  gap:30px!important;
+  margin:0 0 20px!important;
+  padding:0 4px!important;
+}
+
+.gate-zone-head small{
+  display:block!important;
+  color:#6ea9c4!important;
+  font-size:8px!important;
+  letter-spacing:2.5px!important;
+  margin-bottom:8px!important;
+}
+
+.gate-zone-head h2{
+  margin:0!important;
+  color:#eef4f7!important;
+  font-size:clamp(28px,3vw,42px)!important;
+  line-height:1.05!important;
+}
+
+.gate-zone-head h2 em{
+  color:#6fb8d8!important;
+  font-style:normal!important;
+}
+
+.gate-zone-head p{
+  max-width:490px!important;
+  margin:0!important;
+  color:#74858f!important;
+  font-size:11px!important;
+  line-height:1.9!important;
+  text-align:left!important;
+}
+
+/* Gate card itself: compact, no huge dead space */
+.gate-zone .lcrp-gateway{
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  display:block!important;
+  width:100%!important;
+  min-height:0!important;
+  height:auto!important;
+  margin:0!important;
+  padding:22px!important;
+  overflow:visible!important;
+  border-radius:16px!important;
+  border:1px solid rgba(87,157,190,.20)!important;
+  background:
+    linear-gradient(135deg,rgba(6,18,24,.94),rgba(5,10,14,.98))!important;
+  box-sizing:border-box!important;
+}
+
+.gate-zone .rules-gateway-top{
+  display:grid!important;
+  grid-template-columns:74px minmax(0,1fr) 64px!important;
+  align-items:center!important;
+  gap:18px!important;
+  min-height:74px!important;
+  width:100%!important;
+  padding:0!important;
+  margin:0!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+}
+
+.gate-zone .rules-gateway-index{
+  justify-self:start!important;
+  color:#5e9eba!important;
+  font-size:8px!important;
+  letter-spacing:2px!important;
+}
+
+.gate-zone .rules-gateway-copy{
+  min-width:0!important;
+  padding:0!important;
+  text-align:right!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+}
+
+.gate-zone .rules-gateway-copy .drag-kicker{
+  display:block!important;
+  margin-bottom:5px!important;
+  color:#6aa9c4!important;
+  font-size:7px!important;
+  letter-spacing:2px!important;
+}
+
+.gate-zone .rules-gateway-copy strong{
+  display:block!important;
+  margin:0 0 5px!important;
+  font-size:30px!important;
+  line-height:1.1!important;
+  color:#f0f5f8!important;
+  white-space:normal!important;
+}
+
+.gate-zone .rules-gateway-copy strong em{
+  color:#dff5ff!important;
+  background:#427f9d!important;
+  padding:0 6px!important;
+  border-radius:3px!important;
+  font-style:normal!important;
+}
+
+.gate-zone .rules-gateway-copy small{
+  color:#71828c!important;
+  font-size:9px!important;
+}
+
+.gate-zone .rules-gateway-orbit{
+  justify-self:end!important;
+  width:58px!important;
+  height:58px!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  opacity:.72!important;
+}
+
+.gate-zone .rules-marquee{
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  width:100%!important;
+  height:28px!important;
+  margin:15px 0!important;
+  overflow:hidden!important;
+  border-radius:8px!important;
+  border:1px solid rgba(82,148,177,.08)!important;
+  background:rgba(8,19,25,.58)!important;
+}
+
+.gate-zone .rules-marquee>div{
+  line-height:28px!important;
+  font-size:7px!important;
+  letter-spacing:2px!important;
+  color:#527e92!important;
+}
+
+/* Slider rebuilt cleanly */
+.gate-zone .rules-drag-track{
+  --drag:0px;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+  width:100%!important;
+  height:64px!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border-radius:14px!important;
+  border:1px solid rgba(91,157,188,.22)!important;
+  background:rgba(5,12,17,.88)!important;
+  box-sizing:border-box!important;
+  isolation:isolate!important;
+}
+
+.gate-zone .rules-drag-thumb{
+  position:absolute!important;
+  top:7px!important;
+  left:7px!important;
+  margin:0!important;
+  width:48px!important;
+  height:48px!important;
+  min-width:48px!important;
+  min-height:48px!important;
+  border:0!important;
+  border-radius:11px!important;
+  display:grid!important;
+  place-items:center!important;
+  background:linear-gradient(145deg,#4f94b5,#3c7897)!important;
+  color:#fff!important;
+  font-size:23px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  transform:translate3d(var(--drag),0,0)!important;
+  transform-origin:center!important;
+  z-index:8!important;
+  box-sizing:border-box!important;
+}
+
+.gate-zone .rules-drag-thumb span{
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  line-height:1!important;
+  transform:none!important;
+}
+
+.gate-zone .drag-flow{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  display:flex!important;
+  gap:9px!important;
+  opacity:.34!important;
+}
+
+.gate-zone .drag-track-label{
+  position:absolute!important;
+  right:18px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  text-align:right!important;
+  pointer-events:none!important;
+}
+
+.gate-zone .drag-track-label span{
+  display:block!important;
+  color:#5f8091!important;
+  font-size:7px!important;
+  margin-bottom:2px!important;
+}
+
+.gate-zone .drag-track-label b{
+  display:block!important;
+  color:#b7c8d1!important;
+  font-size:12px!important;
+}
+
+/* Make the rest of the page clearly separated too */
+.section{
+  margin:0!important;
+  padding:68px 0!important;
+  border-top:1px solid rgba(255,255,255,.045)!important;
+}
+
+@media(max-width:900px){
+  .lcrp-hero{
+    grid-template-columns:1fr!important;
+    grid-template-areas:
+      "copy"
+      "visual"
+      "strip"
+      "ticker"!important;
+    padding:30px 22px!important;
+    gap:18px!important;
+  }
+
+  .lcrp-copy{text-align:center!important}
+  .lcrp-copy p{margin-inline:auto!important}
+  .lcrp-copy .hero-actions{justify-content:center!important}
+  .lcrp-state{margin-inline:auto!important}
+
+  .gate-zone{
+    margin:38px 0 56px!important;
+  }
+
+  .gate-zone-head{
+    display:block!important;
+    text-align:right!important;
+  }
+
+  .gate-zone-head p{
+    margin-top:10px!important;
+    max-width:none!important;
+    text-align:right!important;
+  }
+}
+
+@media(max-width:560px){
+  .gate-zone .lcrp-gateway{
+    padding:14px!important;
+  }
+
+  .gate-zone .rules-gateway-top{
+    grid-template-columns:1fr!important;
+    text-align:center!important;
+  }
+
+  .gate-zone .rules-gateway-index,
+  .gate-zone .rules-gateway-orbit{
+    display:none!important;
+  }
+
+  .gate-zone .rules-gateway-copy{
+    text-align:center!important;
+  }
+
+  .gate-zone .rules-gateway-copy strong{
+    font-size:26px!important;
+  }
+
+  .gate-zone .rules-drag-track{
+    height:58px!important;
+  }
+
+  .gate-zone .rules-drag-thumb{
+    top:6px!important;
+    left:6px!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    min-height:44px!important;
+  }
+}
