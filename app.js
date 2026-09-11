@@ -468,6 +468,22 @@ async function renderAdmin(){
         <div class="admin-public-team-list">${(st.teamMembers||[]).sort((a,b)=>(a.order||0)-(b.order||0)).map(publicTeamCard).join('')||'<div class="notice">لسه مفيش أعضاء مضافين للفريق العام.</div>'}</div>
       </div>
 
+      <div class="card admin-bot-sync-card">
+        <div class="admin-card-kicker">DISCORD BOT SYNC</div>
+        <h3>نظام البوت المتصل بالموقع</h3>
+        <p>الموقع مربوط بنفس نظام Turbo Bot: نوع الشخصية، مراجعة التقديم، المقابلة الصوتية، الرولات، سجل النشاط، النسخ الاحتياطي، وStaff Panel.</p>
+        <div class="bot-feature-grid">
+          <span>نوع الشخصية</span>
+          <span>مراجعة Discord</span>
+          <span>Voice Review</span>
+          <span>12h Reapply</span>
+          <span>Audit Log</span>
+          <span>Backup / Restore</span>
+          <span>Owner / Manager / Admin</span>
+          <span>Interview Slots</span>
+        </div>
+      </div>
+
       ${staffControls}${ownerControls}
     </div>
     <div class="card applications-card"><div class="applications-toolbar"><div><span>APPLICATION REVIEW</span><h3>مراجعة التقديمات</h3></div><div class="application-search"><input id="applicationSearch" placeholder="ابحث بالاسم أو Discord ID أو رقم التقديم" oninput="filterApplications()"><span>⌕</span></div></div><div class="application-filters"><button class="application-filter-btn active" data-filter="all" onclick="setApplicationFilter('all')">الكل</button><button class="application-filter-btn" data-filter="review" onclick="setApplicationFilter('review')">قيد المراجعة</button><button class="application-filter-btn" data-filter="accepted" onclick="setApplicationFilter('accepted')">المقبولين</button><button class="application-filter-btn" data-filter="rejected" onclick="setApplicationFilter('rejected')">المرفوضين / المحظورين</button></div><div id="applicationList" class="application-list"></div></div>
