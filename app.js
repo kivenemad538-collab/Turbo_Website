@@ -843,10 +843,51 @@ const JOB_META={ems:{name:'تقديم مسعف',icon:'✚',desc:'انضم للإ
 function renderJobs(){
   const grid=$('#jobsGrid');if(!grid)return;
   grid.innerHTML=Object.entries(JOB_META).map(([id,j])=>`<article class="job-card job-${id}"><div class="job-icon">${j.icon}</div><small>TURBO DEPARTMENT</small><h3>${j.name}</h3><p>${j.desc}</p><button class="btn primary" type="button" onclick="openJobPortal('${id}')">فتح التقديم</button></article>`).join('');
-  const mine=$('#myJobApplications');if(!mine)return;const apps=me?.jobApplications||[];mine.innerHTML=apps.length?`<div class="job-history-title">تقديماتك الأخيرة</div><div class="job-history-grid">${apps.slice(0,6).map(x=>`<div class="job-history-item"><b>${JOB_META[x.type]?.name||x.type}</b><span class="job-state job-state-${x.status}">${x.status==='pending'?'قيد المراجعة':x.status==='accepted'?'مقبول':'مرفوض'}</span>${x.workshopName?`<small>${esc(x.workshopName)}</small>`:''}</div>`).join('')}</div>`:'';
+  const mine=$('#myJobApplications');if(!mine)return;const apps=me?.jobApplications||[];mine.innerHTML=apps.length?`<div class="job-history-title">تقديماتك الأخيرة</div><div class="job-history-grid">${apps.slice(0,6).map(x=>`<div class="job-history-item"><b>${JOB_META[x.type]?.name||x.type}</b><span class="job-state job-state-${x.status}">${x.status==='pending'?'قيد المراجعة':x.status==='accepting'?'جاري فتح التذكرة':x.status==='accepted'?'مقبول':x.status==='rejected'?'مرفوض':x.status}</span>${x.workshopName?`<small>${esc(x.workshopName)}</small>`:''}</div>`).join('')}</div>`:'';
 }
-window.openJobPortal=function(type){if(!token){toast('سجّل دخول Discord الأول');location.href=$('#loginBtn').href;return}const j=JOB_META[type];if(!j)return;const shops=(pub?.mechanicWorkshops||[]);const shopSelect=type==='mechanic'?`<div class="field full"><label>اختار الورشة</label><select name="workshopId" required><option value="">اختر الورشة</option>${shops.map(w=>`<option value="${esc(w.id)}">${esc(w.name)}</option>`).join('')}</select>${!shops.length?'<small class="field-hint">الإدارة لسه مضفتش ورش.</small>':''}</div>`:'';$('#jobPortalBody').innerHTML=`<div class="portal-intro"><span>JOB APPLICATION</span><h2>${j.name}</h2><p>${j.desc}</p></div><form id="jobApplyForm" class="vision-form portal-form"><input type="hidden" name="type" value="${type}"><div class="form-grid"><div class="field"><label>الاسم الحقيقي</label><input name="realName" required></div><div class="field"><label>العمر</label><input name="age" type="number" min="16" max="80" required></div>${shopSelect}<div class="field full"><label>خبرتك في الوظيفة</label><textarea name="experience" minlength="20" required></textarea></div><div class="field full"><label>ليه عايز تنضم للقسم؟</label><textarea name="why" minlength="20" required></textarea></div><div class="field full"><label>أوقات تواجدك</label><textarea name="availability" required></textarea></div></div><button class="btn primary wide" type="submit">إرسال التقديم</button></form>`;$('#jobApplyForm').onsubmit=submitJobApplication;const p=$('#jobPortal');p.classList.remove('hidden');p.setAttribute('aria-hidden','false');document.body.classList.add('portal-open')};
+window.openJobPortal=function(type){
+  if(!token){toast('سجّل دخول Discord الأول');location.href=$('#loginBtn').href;return}
+  const j=JOB_META[type];if(!j)return;
+  const active=(me?.jobApplications||[]).find(x=>x.type===type&&['pending','accepting','accepted'].includes(x.status));
+  if(active){toast(active.status==='accepted'?'أنت مقبول بالفعل في التقديم ده':'عندك تقديم لنفس الوظيفة قيد المراجعة');return}
+  const shops=(pub?.mechanicWorkshops||[]);
+  if(type==='mechanic'&&!shops.length){toast('لا توجد ورش متاحة للتقديم حاليًا');return}
+  const shopSelect=type==='mechanic'?`<div class="field full"><label>اختار الورشة</label><select name="workshopId" required><option value="">اختر الورشة</option>${shops.map(w=>`<option value="${esc(w.id)}">${esc(w.name)}</option>`).join('')}</select></div>`:'';
+  $('#jobPortalBody').innerHTML=`<div class="portal-intro"><span>JOB APPLICATION</span><h2>${j.name}</h2><p>${j.desc}</p></div><form id="jobApplyForm" class="vision-form portal-form"><input type="hidden" name="type" value="${type}"><div class="form-grid"><div class="field"><label>الاسم الحقيقي</label><input name="realName" autocomplete="name" required></div><div class="field"><label>العمر</label><input name="age" type="number" min="16" max="80" required></div>${shopSelect}<div class="field full"><label>خبرتك في الوظيفة</label><textarea name="experience" minlength="20" maxlength="1000" required></textarea><small class="field-hint">20 حرف على الأقل</small></div><div class="field full"><label>ليه عايز تنضم للقسم؟</label><textarea name="why" minlength="20" maxlength="1000" required></textarea><small class="field-hint">20 حرف على الأقل</small></div><div class="field full"><label>أوقات تواجدك</label><textarea name="availability" minlength="5" maxlength="500" required></textarea></div></div><div id="jobFormError" class="notice bad hidden"></div><button id="jobSubmitBtn" class="btn primary wide" type="submit">إرسال التقديم</button></form>`;
+  $('#jobApplyForm').onsubmit=submitJobApplication;
+  const p=$('#jobPortal');p.classList.remove('hidden');p.setAttribute('aria-hidden','false');document.body.classList.add('portal-open')
+};
 window.closeJobPortal=function(){const p=$('#jobPortal');p.classList.add('hidden');p.setAttribute('aria-hidden','true');document.body.classList.remove('portal-open')};
-async function submitJobApplication(e){e.preventDefault();const body=Object.fromEntries(new FormData(e.target));body.age=Number(body.age);try{const r=await api('/api/job-applications',{method:'POST',body:JSON.stringify(body)});toast(`تم إرسال تقديم الوظيفة #${r.application.number}`);closeJobPortal();me=await api('/api/me');renderJobs()}catch(err){const map={JOB_ALREADY_PENDING:'عندك تقديم لنفس الوظيفة قيد المراجعة',WORKSHOP_REQUIRED:'اختار ورشة متاحة',JOB_ANSWERS_SHORT:'اكتب تفاصيل أكتر في الإجابات'};toast(map[err.message]||'تعذر إرسال التقديم')}}
+async function submitJobApplication(e){
+  e.preventDefault();
+  const form=e.target;
+  if(form.dataset.sending==='1')return;
+  const btn=form.querySelector('#jobSubmitBtn');
+  const errBox=form.querySelector('#jobFormError');
+  const body=Object.fromEntries(new FormData(form));body.age=Number(body.age);
+  const map={
+    LOGIN_REQUIRED:'سجّل دخول Discord الأول.',REAL_NAME_TWO_PARTS:'اكتب الاسم الأول والأخير.',INVALID_AGE:'العمر لازم يكون بين 16 و80.',
+    INVALID_JOB_TYPE:'نوع الوظيفة غير صحيح.',JOB_ALREADY_ACTIVE:'عندك تقديم قائم لنفس الوظيفة بالفعل.',JOB_ALREADY_PENDING:'عندك تقديم لنفس الوظيفة قيد المراجعة.',
+    WORKSHOP_REQUIRED:'اختار ورشة متاحة.',JOB_ANSWERS_SHORT:'الخبرة وسبب الانضمام لازم يكونوا 20 حرف على الأقل.',JOB_AVAILABILITY_SHORT:'اكتب أوقات تواجدك بشكل أوضح.',
+    JOB_DISCORD_UNAVAILABLE:'البوت غير متصل حاليًا. جرّب بعد دقيقة.',JOB_REVIEW_CHANNEL_INVALID:'روم مراجعة التقديم غير مضبوط في البوت.',JOB_REVIEW_SEND_FAILED:'التقديم لم يصل لروم المراجعة، لذلك لم يتم حفظه. جرّب مرة أخرى.',
+    CORS_NOT_ALLOWED:'رابط الموقع غير مسموح به في إعدادات البوت.'
+  };
+  form.dataset.sending='1';
+  if(btn){btn.disabled=true;btn.textContent='جاري إرسال التقديم...'}
+  if(errBox){errBox.classList.add('hidden');errBox.textContent=''}
+  try{
+    const r=await api('/api/job-applications',{method:'POST',body:JSON.stringify(body)});
+    toast(`تم إرسال تقديم الوظيفة #${r.application.number}`);
+    closeJobPortal();
+    me=await api('/api/me');pub=await api('/api/public');renderJobs();
+  }catch(err){
+    const msg=map[err.message]||`تعذر إرسال التقديم${err.message?` (${err.message})`:''}`;
+    if(errBox){errBox.textContent=msg;errBox.classList.remove('hidden')}
+    toast(msg);
+  }finally{
+    form.dataset.sending='0';
+    if(btn&&document.body.contains(btn)){btn.disabled=false;btn.textContent='إرسال التقديم'}
+  }
+}
 
 
