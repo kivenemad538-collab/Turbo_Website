@@ -150,7 +150,7 @@ async function init(){
   document.querySelectorAll('#nav a').forEach(a=>a.onclick=(e)=>{ $('#nav').classList.remove('open'); if(a.getAttribute('href')==='#apply'){e.preventDefault();openApplicationPortal();} });
   if($('#closeApplicationPortal'))$('#closeApplicationPortal').onclick=closeApplicationPortal;
   if($('#closeJobPortal'))$('#closeJobPortal').onclick=closeJobPortal;
-  $('#loginBtn').href=`${API || 'https://botsturbo-production.up.railway.app'}/auth/discord`; $('#loginBtn').onclick=oauthLogin;
+  $('#loginBtn').href=`${API || 'https://web-production-a209e.up.railway.app'}/auth/discord`; $('#loginBtn').onclick=oauthLogin;
   $('#adminSecretBtn').onclick=openAdminPanel;
   $('#adminSecretBtn').classList.add('hidden');
 
@@ -1073,5 +1073,4 @@ async function submitJobApplication(e){
     if(btn&&document.body.contains(btn)){btn.disabled=false;btn.textContent='إرسال التقديم'}
   }
 }
-
 

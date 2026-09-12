@@ -1,2 +1,2 @@
 // Turbo RP API — Railway
-window.TURBO_API = 'https://botsturbo-production.up.railway.app';
+window.TURBO_API = 'https://web-production-a209e.up.railway.app';
