@@ -168,7 +168,7 @@ async function init(){
   }
 
   if(token){
-    try{me=await api('/api/me');renderMe()}
+    try{me=await api('/api/me');renderMe(); if(!me?.isAdmin && location.hash==='#admin') history.replaceState(null,'',location.pathname+location.search+'#home')}
     catch{localStorage.removeItem('turbo_token');token='';renderApply();renderStatus()}
   }else{renderApply();renderStatus()}
 }
@@ -240,7 +240,7 @@ function renderMe(){renderJobs();
   $('#loginBtn').innerHTML=`<span class="discord-dot">◈</span><span>${esc(me.user.globalName||me.user.username)} • خروج</span>`;
   $('#loginBtn').onclick=()=>{localStorage.removeItem('turbo_token');location.reload()};
   const adminBtn=$('#adminSecretBtn');
-  if(me?.isAdmin) adminBtn.classList.remove('hidden'); else adminBtn.classList.add('hidden');
+  if(me?.isAdmin){ adminBtn.classList.remove('hidden'); } else { adminBtn.classList.add('hidden'); $('#admin')?.classList.add('hidden'); if(location.hash==='#admin') history.replaceState(null,'',location.pathname+location.search+'#home'); }
   renderApply();renderStatus();
 }
 function renderApply(){

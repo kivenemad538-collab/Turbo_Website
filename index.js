@@ -14,7 +14,7 @@ import {
   ModalBuilder, TextInputBuilder, TextInputStyle, Events, PermissionFlagsBits, ChannelType
 } from 'discord.js';
 
-const BUILD_VERSION = 'V33-PER-JOB-OPEN-CLOSE';
+const BUILD_VERSION = 'V35-PANEL-ALLOWLIST-ONLY';
 
 // ===================== DISCORD IDs ===========================
 const IDS = {
@@ -213,14 +213,11 @@ function signToken(user, ttl=7*24*3600){const payload=b64({...user,exp:Math.floo
 function verifyToken(token){try{const [p,s]=String(token||'').split('.');const good=crypto.createHmac('sha256',secret()).update(p).digest('base64url');if(!crypto.timingSafeEqual(Buffer.from(s),Buffer.from(good)))return null;const d=JSON.parse(Buffer.from(p,'base64url').toString());if(d.exp<Date.now()/1000)return null;return d}catch{return null}}
 function auth(req,res,next){const token=(req.headers.authorization||'').replace(/^Bearer\s+/i,'');const user=verifyToken(token);if(!user)return res.status(401).json({error:'LOGIN_REQUIRED'});req.user=user;next()}
 function isOwner(user){return String(user?.id||'')===String(IDS.OWNER_USER_ID)}
-function hasRoleAdmin(user){const ids=IDS.ADMIN_ROLE_IDS.filter(Boolean);return !!user?.roles?.some(r=>ids.includes(r))}
 function panelStaffEntry(user,db){return db?.panelAdmins?.find(a=>String(a.discordId)===String(user?.id))}
 function panelStaffRole(user,db){
   if(isOwner(user))return 'owner';
-  if(user?.panelAdmin===true)return 'admin';
   const entry=panelStaffEntry(user,db);
   if(entry)return entry.role==='manager'?'manager':'admin';
-  if(hasRoleAdmin(user))return 'admin';
   return null;
 }
 function isManager(user,db){const r=panelStaffRole(user,db);return r==='owner'||r==='manager'}
@@ -780,16 +777,8 @@ app.post('/api/interviews/:slotId/book',auth,asyncRoute(async(req,res)=>{
 }));
 
 
-app.post('/api/admin/password-login',asyncRoute(async(req,res)=>{
-  const expected=String(process.env.ADMIN_PANEL_PASSWORD||'');
-  const given=String(req.body?.password||'');
-  if(!expected) return res.status(503).json({error:'ADMIN_PASSWORD_NOT_CONFIGURED'});
-  const a=Buffer.from(given),b=Buffer.from(expected);
-  const ok=a.length===b.length && crypto.timingSafeEqual(a,b);
-  if(!ok) return res.status(401).json({error:'INVALID_ADMIN_PASSWORD'});
-  const token=signToken({id:'panel-password',username:'Turbo Admin',roles:[],panelAdmin:true},6*3600);
-  res.json({ok:true,token,expiresIn:6*3600});
-}));
+// Admin panel access is Discord-ID allowlist only. Password/role bypasses are disabled.
+app.post('/api/admin/password-login',(req,res)=>res.status(404).json({error:'NOT_FOUND'}));
 
 app.get('/api/admin/state',auth,admin,asyncRoute(async(req,res)=>{
   const db=await readDB();
