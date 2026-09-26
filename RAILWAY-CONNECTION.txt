@@ -1,4 +1,4 @@
-Turbo Website - Railway connection
+Legend Website - Railway connection
 
 The website is configured to use:
 https://web-production-a209e.up.railway.app

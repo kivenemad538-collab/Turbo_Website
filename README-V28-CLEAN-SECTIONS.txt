@@ -1,4 +1,4 @@
-Turbo Website V28
+Legend Website V28
 
 Main fix:
 - 'Choose your gate' is no longer inside the hero. It is a separate page section.

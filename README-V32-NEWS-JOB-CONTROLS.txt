@@ -1,4 +1,4 @@
-Turbo Website V32
+Legend Website V32
 - Admin can open/close normal applications.
 - Admin can separately open/close job applications.
 - Admin can publish/delete news; news appears in a new public News section.

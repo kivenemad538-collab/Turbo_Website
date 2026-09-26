@@ -1,4 +1,4 @@
-Turbo RP V35 - Panel Allowlist Only
+Legend RP V35 - Panel Allowlist Only
 
 Admin panel access is now granted ONLY to:
 1) OWNER_USER_ID

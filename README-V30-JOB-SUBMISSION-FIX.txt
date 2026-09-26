@@ -1,4 +1,4 @@
-Turbo Website V30 — Job Submission Fix
+Legend Website V30 — Job Submission Fix
 
 Fixes:
 - Prevents double submission while the request is sending.

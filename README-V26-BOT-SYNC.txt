@@ -1,4 +1,4 @@
-Turbo Website V26 — Bot Sync
+Legend Website V26 — Bot Sync
 
 Synced the website with Bots_Turbo-main (2) / Bot V17 additions while keeping all V25 website features.
 
